@@ -1,3 +1,6 @@
+import pyb
+import time
+
 class MotorDriver:
     """! 
     This class implements a motor driver for an ME405 kit. 
@@ -9,12 +12,21 @@ class MotorDriver:
         pins and turning off the motor for safety. 
         @param en_pin (There will be several pin parameters)
         """
+        #Enable pin
         self.EN = pyb.Pin (pyb.Pin.board.en_pin, pyb.Pin.OUT_OD)
+
+        #Input pins
         self.IN_1 = pyb.Pin (pyb.Pin.board.in1pin, pyb.Pin.OUT_PP)
         self.IN_2 = pyb.Pin (pyb.Pin.board.in2pin, pyb.Pin.OUT_PP)
+
+        #create timer and channels
         self.time = pyb.Timer(timer, prescaler=0,period=0xFFFF)
         self.time_ch1 = time.channel (1, pyb.Timer.PWM, pin = IN_1B)
         self.time_ch2 = time.channel (2, pyb.Timer.PWM, pin = IN_2B)
+
+        #initialize with motor off for safety
+        self.EN.low()
+
         print ("Creating a motor driver")
         
     def set_duty_cycle (self, level):
@@ -28,3 +40,7 @@ class MotorDriver:
         """
         self.EN.high()
         print (f"Setting duty cycle to {level}")
+
+        while True:
+            self.time_ch1.pulse_width_percent(0)
+            self.time_ch2.pulse_width_percent(level)

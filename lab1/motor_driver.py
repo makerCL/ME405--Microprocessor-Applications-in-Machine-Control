@@ -27,4 +27,6 @@ class MotorDriver:
                cycle of the voltage sent to the motor 
         """
         self.EN.high()
+        self.time_ch1.pulse_width_percent(0)
+        self.time_ch2.pulse_width_percent(level)
         print (f"Setting duty cycle to {level}")

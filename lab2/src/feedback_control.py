@@ -10,10 +10,9 @@ class FeedbackControl:
     @param setpoint
     @param time_step- in seconds
     '''
-    def __init__(self, setpoint, k_p = 1, time_step = 0.1):
+    def __init__(self, setpoint = 0, k_p = 0):
         self.k_p = k_p
         self.setpoint = setpoint
-        self.time_step = time_step
 
     def run(self, current_theta):
         pass

@@ -1,4 +1,4 @@
-'''
+'''!
 @file       lab1_motor.py
 
 @brief		test file used for motor

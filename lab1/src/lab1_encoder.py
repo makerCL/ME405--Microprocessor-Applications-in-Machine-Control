@@ -1,4 +1,4 @@
-'''
+'''!
 @file       lab1_encoder.py
 
 @brief		test file used for encoder

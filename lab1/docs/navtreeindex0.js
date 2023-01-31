@@ -1,0 +1,25 @@
+var NAVTREEINDEX0 =
+{
+"annotated.html":[0,0],
+"classencoder__reader_1_1_encoder_reader.html":[0,0,0,0],
+"classencoder__reader_1_1_encoder_reader.html#a2dbc8d461fe62bfa0461f99b644d9b02":[0,0,0,0,2],
+"classencoder__reader_1_1_encoder_reader.html#a9801116bbe535134eb87de5e513394d3":[0,0,0,0,1],
+"classencoder__reader_1_1_encoder_reader.html#ac3751ab8f098c5e3e17b5e8c2e1cf7a1":[0,0,0,0,0],
+"classes.html":[0,1],
+"classmotor__driver_1_1_motor_driver.html":[0,0,1,0],
+"classmotor__driver_1_1_motor_driver.html#a199c4470f110ddf92498824a9bf1e4a9":[0,0,1,0,1],
+"classmotor__driver_1_1_motor_driver.html#ac30d316b06347c25f2fa3ce1e6b5797a":[0,0,1,0,0],
+"dir_11becd16c164d3822d73319fcac7f8c2.html":[1,0,0,0],
+"dir_30b8b56b34db815a64954e8b425ad116.html":[1,0,0],
+"encoder__reader_8py.html":[1,0,0,0,0],
+"files.html":[1,0],
+"functions.html":[0,2,0],
+"functions_func.html":[0,2,1],
+"index.html":[],
+"lab1__encoder_8py.html":[1,0,0,0,1],
+"lab1__motor_8py.html":[1,0,0,0,2],
+"motor__driver_8py.html":[1,0,0,0,3],
+"pages.html":[],
+"test__code_8py.html":[1,0,0,0,4],
+"test__code_8py.html#ab88be4735421e164377b29ea7d9df754":[1,0,0,0,4,0]
+};

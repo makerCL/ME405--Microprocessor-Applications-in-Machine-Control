@@ -1,4 +1,4 @@
-'''
+'''!
 @file       encoder_reader.py
 
 @brief		Encoder reader class
@@ -19,8 +19,7 @@ class EncoderReader:
     """
     def __init__ (self, enc_pin1, enc_pin2, timer):
         """! 
-        Creates a motor driver by initializing GPIO
-        pins and turning off the motor for safety. 
+        Creates an encoder reader 
         @param timer the timer number that the 2 encoder channels are created on
         @param enc_pin1 the pin used for first encoder channel
         @param enc_pin2 the pin used for the second encoder channel
@@ -37,7 +36,7 @@ class EncoderReader:
         print ("Creating a encoder driver")    
     def read (self):
         """!
-        Function that reads the position of the motor while detecting under/overflow conditions. 
+        Function that reads the position of the encoder while detecting under/overflow conditions. 
         Once read, the position is saved to the position property of the object
         """
         self.delta = self.time.counter() - self.last_count #current timer count - saved count from last reading
@@ -54,7 +53,10 @@ class EncoderReader:
         self.position += self.delta # add delta, scaled with under/overflow condition, to current position
         self.last_count = self.time.counter() # update last count
 
-    def zero(self):
+    def zero (self):
+        """!
+        Function that zeros the encoder position at the current position.
+        """
         self.position = 0 
         self.last_count = self.time.counter()
 

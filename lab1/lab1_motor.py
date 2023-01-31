@@ -1,3 +1,17 @@
+'''
+@file       lab1_motor.py
+
+@brief		test file used for motor
+
+@author		Caleb Erlenborn
+@author     Miles Alderman
+@author     Yamil Silva
+
+@date		January 31, 2023
+
+'''
+
+
 import pyb
 import time
 

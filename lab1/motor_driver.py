@@ -1,19 +1,40 @@
+'''
+@file       motor_driver.py
+
+@brief		Motor driver class
+
+@author		Caleb Erlenborn
+@author     Miles Alderman
+@author     Yamil Silva
+
+@date		January 31, 2023
+
+'''
+
+
 import pyb
 
 class MotorDriver:
     """! 
-    This class implements a motor driver for an ME405 kit. 
+    This class implements a DC motor driver for an ME405 kit
     """
     def __init__ (self, en_pin, in1pin, in2pin, timer):
-        #import pyb
         """! 
         Creates a motor driver by initializing GPIO
         pins and turning off the motor for safety. 
-        @param en_pin (There will be several pin parameters)
+        @param en_pin enable pin for H-bridge
+        @param in1pin first control pin of H bridge
+        @param in2pin second control pin of H bridge
+        @param timer number to use
         """
-        self.EN = pyb.Pin (en_pin, pyb.Pin.OUT_OD, pull = pyb.Pin.PULL_UP)
+        #setup H bridge- open drain with pullups enabled
+        self.EN = pyb.Pin (en_pin, pyb.Pin.OUT_OD, pull = pyb.Pin.PULL_UP) 
+
+        # PWM h bridge pins setup
         self.IN_1 = pyb.Pin (in1pin, pyb.Pin.OUT_PP)
         self.IN_2 = pyb.Pin (in2pin, pyb.Pin.OUT_PP)
+
+        #create timer
         self.time = pyb.Timer(timer, prescaler=0,period=0xFFFF)
         self.time_ch1 = self.time.channel (1, pyb.Timer.PWM, pin = self.IN_1)
         self.time_ch2 = self.time.channel (2, pyb.Timer.PWM, pin = self.IN_2)
@@ -26,11 +47,15 @@ class MotorDriver:
         cause torque in one direction, negative values
         in the opposite direction.
         @param level A signed integer holding the duty
-               cycle of the voltage sent to the motor 
+               cycle of the voltage sent to the motor. 
+               (+) for clockwise
+               (-) for anticlockwise
         """
-        self.EN.value([True])
-        if level < 0: # Controls directionality motor
-            self.time_ch1.pulse_width_percent(abs(level))
+        self.EN.value([True]) #enable motor
+
+        if level < 0: # conditional logic determines directionality motor
+            # which channel the pwm is sent on determines direction in H bridge
+            self.time_ch1.pulse_width_percent(abs(level)) 
             self.time_ch2.pulse_width_percent(0)
         elif level > 0:
             self.time_ch1.pulse_width_percent(0)

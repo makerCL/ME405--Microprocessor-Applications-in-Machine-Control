@@ -1,9 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
+'''
+@file       lab1_encoder.py
 
-This is a temporary script file.
-"""
+@brief		test file used for encoder
+
+@author		Caleb Erlenborn
+@author     Miles Alderman
+@author     Yamil Silva
+
+@date		January 31, 2023
+
+'''
 import pyb
 import time
 print('hello world')

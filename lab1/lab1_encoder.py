@@ -13,7 +13,6 @@ pin_C7 = pyb.Pin (pyb.Pin.board.PC7, pyb.Pin.IN)
 
 
 timer_8 = pyb.Timer(8, prescaler=0,period=0xFFFF)
-
 timer_8_ch1 = timer_8.channel (1, pyb.Timer.ENC_AB, pin = pin_C6)
 timer_8_ch2 = timer_8.channel (2, pyb.Timer.ENC_AB, pin = pin_C7)
 pos = 0

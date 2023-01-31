@@ -62,6 +62,14 @@ class MotorDriver:
             self.time_ch2.pulse_width_percent(abs(level))
         #print (f"Setting duty cycle to {level}")
 
+    def shutdown(self):
+        """!
+        Shuts down motor for safety and practicality
+        """
+        self.set_duty_cycle(0)
+        self.EN.low()
+        print("Motor Shutdown")
+
 # Block of code to test Motor
 if __name__ == '__main__':
     en_pin = pyb.Pin.board.PC1

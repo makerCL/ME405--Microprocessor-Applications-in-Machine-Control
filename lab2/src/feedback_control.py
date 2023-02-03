@@ -13,13 +13,25 @@ class FeedbackControl:
         self.k_p = k_p
         self.setpoint = setpoint
         self.PWM = 0
+        self.pos_data = []
+        
     def run(self, current_theta):
         self.PWM = self.k_p*(self.setpoint - current_theta)
         
     def set_setpoint(self, setpoint):
         self.setpoint = setpoint
+        
     def set_kp(self,k_p):
         self.k_p = k_p
+    
+    def print_pos_data(self):
+        print("Printing position data")
+        for point in self.pos_data:
+            print(point)
+            
+            
+            
+            
 #### TEST CODE #############################
 
 if __name__ == '__main__':

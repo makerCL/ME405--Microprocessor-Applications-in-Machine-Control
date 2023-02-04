@@ -16,6 +16,7 @@ timer = 8
 encd = er.EncoderReader (enc_pin1, enc_pin2, timer)
 
 mc = fc.FeedbackControl()
+mc.init_VCP()
 mc.set_setpoint(1000)
 
 
@@ -29,12 +30,19 @@ while t<160:
     encd.read()
     mc.run(encd.position)
     moe.set_duty_cycle (mc.PWM)
+    
     #append current time and position data point
     t =pyb.millis() - start_time
     mc.pos_data.append([t, encd.position])
     utime.sleep_ms(10)
 
-mc.print_pos_data()
+
+#mc.data_transfer(data)
+
+
+#mc.print_pos_data()
 moe.set_duty_cycle (0)
+
+
 while True:
     utime.sleep_ms(10)

@@ -3,6 +3,8 @@
 
 
 '''
+import pyb
+
 class FeedbackControl:
     '''!
     @param k_p The controller proportional gain [PWM/count]
@@ -28,7 +30,31 @@ class FeedbackControl:
         print("Printing position data")
         for point in self.pos_data:
             print(point)
+    
+    def init_VCP(self):
+        print("Starting nucleo send")
+        #ser = serial.Serial('/dev/cu.usbmodem207537B3424B2')  # open serial port
+        try:
+            self.vcp = pyb.USB_VCP()
+            pyb.repl_uart(None)
+            self.u2 = pyb.UART(2, baudrate=115200)      # Set up the second USB-serial port
+        except:
+            print("Problem openning VCP/UART")
+
+        #TODO lots of possible errors/edge cases here that we should try to catch
             
+    def data_transfer(self, data):
+        #Make sure that VCP has been properly initalized
+        if not self.vcp.isconnected():
+            print("VCP not proeprly initialized")
+            return
+        pass
+        
+        #pull out x and y points (homework algorithm)
+        #loop through sending points
+            #self.u2.write(f"{x_val},{y_val}\r\n")   # The "\r\n" is end-of-line stuff
+            
+        
             
             
             

@@ -31,7 +31,7 @@ class FeedbackControl:
         for point in self.pos_data:
             print(point)
     
-    def add_point(self, point)
+    def add_point(self, point):
         self.pos_data.append(point)
         
     def init_VCP(self):

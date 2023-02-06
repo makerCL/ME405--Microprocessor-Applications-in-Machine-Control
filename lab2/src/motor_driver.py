@@ -53,13 +53,15 @@ class MotorDriver:
         """
         self.EN.value([True]) #enable motor
 
-        if level < 0: # conditional logic determines directionality motor
+        if level <= 0: # conditional logic determines directionality motor
             # which channel the pwm is sent on determines direction in H bridge
-            self.time_ch1.pulse_width_percent(min(100,abs(level))) #min to ensure Duty !> 100
+            level = min(100,abs(level))
+            self.time_ch1.pulse_width_percent(level) #min to ensure Duty !> 100
             self.time_ch2.pulse_width_percent(0)
         elif level > 0:
+            level = min(100,abs(level))
             self.time_ch1.pulse_width_percent(0)
-            self.time_ch2.pulse_width_percent(min(100,abs(level)) )#min to ensure Duty !> 100
+            self.time_ch2.pulse_width_percent(level) #min to ensure Duty !> 100
         #print (f"Setting duty cycle to {level}")
 
     def shutdown(self):

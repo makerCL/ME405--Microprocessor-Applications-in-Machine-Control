@@ -15,7 +15,7 @@ import time
 print("Attempting Port Receive")
 
 #try:
-with serial.Serial ('/dev/cu.usbmodem11403', 115200) as s_port:
+with serial.Serial ('/dev/cu.usbmodem2103', 115200) as s_port:
     while(True):
         if s_port.in_waiting:
             charIn = s_port.readline()
@@ -24,3 +24,6 @@ with serial.Serial ('/dev/cu.usbmodem11403', 115200) as s_port:
 
 #except:
 #    print('did not work!')
+
+#pull out x and y points (homework algorithm)
+    #loop through sending points

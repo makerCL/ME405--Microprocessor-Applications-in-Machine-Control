@@ -31,6 +31,9 @@ class FeedbackControl:
         for point in self.pos_data:
             print(point)
     
+    def add_point(self, point)
+        self.pos_data.append(point)
+        
     def init_VCP(self):
         print("Starting nucleo send")
         #ser = serial.Serial('/dev/cu.usbmodem207537B3424B2')  # open serial port
@@ -43,21 +46,21 @@ class FeedbackControl:
 
         #TODO lots of possible errors/edge cases here that we should try to catch
             
-    def data_transfer(self, data):
+    def data_transfer(self):
+        #data is list of lists, each list is 
         #Make sure that VCP has been properly initalized
         if not self.vcp.isconnected():
             print("VCP not proeprly initialized")
             return
-        pass
+        else:
+            for point in self.pos_data:
+                x_val, y_val = point[0], point[1]
+                self.u2.write(f"{x_val},{y_val}\r\n")   # The "\r\n" is end-of-line stuff
+
+    def data_clear(self):
+        self.pos_data = []
         
-        #pull out x and y points (homework algorithm)
-        #loop through sending points
-            #self.u2.write(f"{x_val},{y_val}\r\n")   # The "\r\n" is end-of-line stuff
-            
-        
-            
-            
-            
+           
 #### TEST CODE #############################
 
 if __name__ == '__main__':

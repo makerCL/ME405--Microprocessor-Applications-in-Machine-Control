@@ -20,10 +20,15 @@ mc.init_VCP()
 mc.set_setpoint(1000)
 
 
-
-inp = input('Enter Kp')
-
-mc.set_kp(float(inp))
+kp = ''
+while kp == '':
+    inp = input('Enter Kp')
+    try:
+        kp = float(inp)
+        mc.set_kp(kp)
+    except:
+        print("Please enter valid Kp")
+    
 t = 0
 start_time = pyb.millis()
 while t<160:   
@@ -33,11 +38,11 @@ while t<160:
     
     #append current time and position data point
     t =pyb.millis() - start_time
-    mc.pos_data.append([t, encd.position])
+    mc.add_point([t, encd.position])
     utime.sleep_ms(10)
 
 
-#mc.data_transfer(data)
+mc.data_transfer()
 
 
 #mc.print_pos_data()

@@ -20,7 +20,7 @@ encd = er.EncoderReader (enc_pin1, enc_pin2, timer)
 ## Create Feedback Control Object
 mc = fc.FeedbackControl()
 mc.init_VCP()
-mc.set_setpoint(1000)
+mc.set_setpoint(1000) # Define setpoint as 1000 encoder counts
 
 ## Loop that prompts for K_p and runs step response based on that.
 while True:
@@ -54,7 +54,3 @@ while True:
     moe.set_duty_cycle (0) # stop motor
     mc.data_transfer() #serial send data
     mc.print_pos_data() # can comment out if desired
-
-
-while True:
-    utime.sleep_ms(10)

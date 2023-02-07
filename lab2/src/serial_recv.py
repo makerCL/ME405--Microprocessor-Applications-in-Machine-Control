@@ -15,8 +15,6 @@ import serial
 from matplotlib import pyplot as plt
 
 
-labels_found = False #for finding labels
-labels = [] #axis labels
 x_pts = [] #x coordinates of points to plot
 y_pts = [] #y coordinates of points to plot
 
@@ -60,6 +58,6 @@ with serial.Serial ('/dev/cu.usbmodem2103', 115200) as s_port:
         plt.plot(x_pts,y_pts)
         plt.xlabel("Time (s)")
         plt.ylabel("Encoder Position (encoder counts)")
-        plt.title("Lab 2 Plot")
+        plt.title(f"Lab 2 Plot, k_p = 0.02")
         plt.show()
 

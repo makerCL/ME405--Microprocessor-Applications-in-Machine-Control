@@ -1,13 +1,17 @@
-'''FOR MAC ONLY
-SCRIPT FOR RECEIVING SERIAL DATA FROM MCU
-terminal command to see usb devices:
-ls -l /dev/cu.usb*
-'''
+"""!
+@file serial_recv.py
 
+SCRIPT FOR RECEIVING SERIAL DATA FROM MCU
+terminal (OSX) command to see usb devices:
+ls -l /dev/cu.usb*
+
+@author Miles Alderman
+@author Caleb Erlenborn
+
+
+"""
 
 import serial
-import time
-start = time.time()
 from matplotlib import pyplot as plt
 
 
@@ -19,8 +23,10 @@ y_pts = [] #y coordinates of points to plot
 
 print("Attempting Port Receive...")
 
+## boolean to indicate if serial data should be interpreted as data points
 transfer_started = False
-    
+
+##open the serial port to receive
 with serial.Serial ('/dev/cu.usbmodem2103', 115200) as s_port:
     while(True):
         while(True):
@@ -50,7 +56,7 @@ with serial.Serial ('/dev/cu.usbmodem2103', 115200) as s_port:
                 except:
                     pass
 
-        #plot the data!
+        #Plot the data!
         plt.plot(x_pts,y_pts)
         plt.xlabel("Time (s)")
         plt.ylabel("Encoder Position (encoder counts)")

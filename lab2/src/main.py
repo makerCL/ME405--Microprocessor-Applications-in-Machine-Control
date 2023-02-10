@@ -1,3 +1,15 @@
+"""!
+@file main.py
+
+@brief Main file to interact with motor, encoder and controller drivers
+
+@author Miles Alderman
+@author Caleb Erlenborn
+
+
+"""
+
+
 import encoder_reader as er
 import motor_driver as md
 import feedback_control as fc

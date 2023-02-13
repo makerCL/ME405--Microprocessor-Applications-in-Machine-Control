@@ -35,10 +35,10 @@ class MotorDriver:
         self.IN_2 = pyb.Pin (in2pin, pyb.Pin.OUT_PP)
 
         #create timer
-        self.time = pyb.Timer(timer, prescaler=0,period=0xFFFF)
+        self.time = pyb.Timer(timer, freq=20000)
         self.time_ch1 = self.time.channel (1, pyb.Timer.PWM, pin = self.IN_1)
         self.time_ch2 = self.time.channel (2, pyb.Timer.PWM, pin = self.IN_2)
-        print ("Creating a motor driver")
+        #print ("Creating a motor driver")
         
     def set_duty_cycle (self, level):
         """!
@@ -62,7 +62,7 @@ class MotorDriver:
             level = min(100,abs(level))
             self.time_ch1.pulse_width_percent(0)
             self.time_ch2.pulse_width_percent(level) #min to ensure Duty !> 100
-        #print (f"Setting duty cycle to {level}")
+        print (f"Setting duty cycle to {level}")
 
     def shutdown(self):
         """!
@@ -74,9 +74,9 @@ class MotorDriver:
 
 # Block of code to test Motor
 if __name__ == '__main__':
-    en_pin = pyb.Pin.board.PC1
-    in1pin = pyb.Pin.board.PA0
-    in2pin = pyb.Pin.board.PA1
-    timer = 5
+    en_pin = pyb.Pin.board.PA10
+    in1pin = pyb.Pin.board.PB4
+    in2pin = pyb.Pin.board.PB5
+    timer = 3
     moe = MotorDriver (en_pin, in1pin, in2pin, timer)
-    moe.set_duty_cycle (-42)        
+    moe.set_duty_cycle (99)        

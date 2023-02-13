@@ -35,7 +35,7 @@ class MotorDriver:
         self.IN_2 = pyb.Pin (in2pin, pyb.Pin.OUT_PP)
 
         #create timer
-        self.time = pyb.Timer(timer, prescaler=0,period=0xFFFF)
+        self.time = pyb.Timer(timer, freq = 20000)
         self.time_ch1 = self.time.channel (1, pyb.Timer.PWM, pin = self.IN_1)
         self.time_ch2 = self.time.channel (2, pyb.Timer.PWM, pin = self.IN_2)
         print ("Creating a motor driver")

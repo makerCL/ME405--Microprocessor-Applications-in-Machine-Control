@@ -14,6 +14,6 @@ After this, we decreased the task frequency of the position control until the pe
 
 Finally, we decreased the task frequency of the controller until the system became unstable. We found that at 4 Hz the system became completely unstable and never reached the final desired value. The plot of the unstable system at 4 Hz is shown below for reference.
 
-![](25hz.png)
+![](4hz.png)
 
 After characterizing the performance of the system at various task frequencies, we implemented a 2 controller system with a task frequency of 100 Hz. The two controllers were given priority of 1 and 2, respectively. This two motor control system worked very well as both motors performed position control independently and simultaneously.

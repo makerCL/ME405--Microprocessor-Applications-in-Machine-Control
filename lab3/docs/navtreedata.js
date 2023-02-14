@@ -25,7 +25,6 @@
 var NAVTREE =
 [
   [ "ME 405 Lab 3", "index.html", [
-    [ "Lab 3", "md_src__r_e_a_d_m_e.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],

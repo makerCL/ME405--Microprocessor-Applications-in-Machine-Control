@@ -1,15 +1,15 @@
 """!
 @file mma845x.py
-This file contains a @b partly @b written MicroPython driver for the MMA8451 
-and MMA8452 accelerometers. It is intended to be used as a starting point for
-an exercise in a mechatronics course. 
 
 @author JR Ridgely
+@author Miles Alderman
+@autor Caleb Erlenborn
 @copyright GPL Version 3.0
 """
 
 import micropython
-
+import pyb
+import time
 
 ## The register address of the STATUS register in the MMA845x
 STATUS_REG = micropython.const (0x00)
@@ -137,9 +137,9 @@ class MMA845x:
         be made, one must call @c active(). """
 
         if self._works:
-            reg1 = ord (self._i2c.mem_read (1, self._addr, CTRL_REG1))
+            reg1 = ord (self.i2c.mem_read (1, self.addr, CTRL_REG1))
             reg1 &= ~0x01
-            self._i2c.mem_write (chr (reg1 & 0xFF), self._addr, CTRL_REG1)
+            self.i2c.mem_write (chr (reg1 & 0xFF), self.addr, CTRL_REG1)
 
 
     def get_ax_bits (self):
@@ -147,8 +147,13 @@ class MMA845x:
         return it.
         @return The measured X acceleration in A/D conversion bits """
 
-        print ('MMA845x clueless about X acceleration')
-        return 0
+        #Read data from the 2 X_acc registers
+        self.x_acc_int = int.from_bytes(self.i2c.mem_read(2, self.addr, OUT_X_MSB), 'big')
+
+        if self.x_acc_int > 32767:
+            self.x_acc_int -= 2**16
+    
+        return self.x_acc_int
 
 
     def get_ay_bits (self):
@@ -156,8 +161,13 @@ class MMA845x:
         return it.
         @return The measured Y acceleration in A/D conversion bits """
 
-        print ('MMA845x clueless about Y acceleration')
-        return 0
+        #Read data from the 2 X_acc registers
+        self.y_acc_int = int.from_bytes(self.i2c.mem_read(2, self.addr, OUT_Y_MSB), 'big')
+
+        if self.y_acc_int > 32767:
+            self.y_acc_int -= 2**16
+    
+        return self.y_acc_int
 
 
     def get_az_bits (self):
@@ -165,8 +175,12 @@ class MMA845x:
         return it.
         @return The measured Z acceleration in A/D conversion bits """
 
-        print ('MMA845x clueless about Z acceleration')
-        return 0
+        self.z_acc_int = int.from_bytes(self.i2c.mem_read(2, self.addr, OUT_Z_MSB), 'big')
+
+        if self.z_acc_int > 32767:
+            self.z_acc_int -= 2**16
+
+        return self.z_acc_int
 
 
     def get_ax (self):
@@ -174,8 +188,10 @@ class MMA845x:
         that the accelerometer was correctly calibrated at the factory.
         @return The measured X acceleration in g's """
 
-        print ('MMA845x uncalibrated X')
-        return 0
+        self.get_ax_bits()
+        self.ax = self.x_acc_int / (2**14 -1)
+        #TODO: conditional logic for different measurement ranges
+        return self.ax
 
 
     def get_ay (self):
@@ -183,9 +199,11 @@ class MMA845x:
         that the accelerometer was correctly calibrated at the factory. The
         measurement is adjusted for the range (2g, 4g, or 8g) setting.
         @return The measured Y acceleration in g's """
-
-        print ('MMA845x uncalibrated Y')
-        return 0
+        
+        self.get_ay_bits()
+        self.ay = self.y_acc_int / (2**14 -1)
+        #TODO: conditional logic for different measurement ranges
+        return self.ay
 
 
     def get_az (self):
@@ -193,9 +211,10 @@ class MMA845x:
         that the accelerometer was correctly calibrated at the factory. The
         measurement is adjusted for the range (2g, 4g, or 8g) setting.
         @return The measured Z acceleration in g's """
-
-        print ('MMA845x uncalibrated Z')
-        return 0
+        self.get_az_bits()
+        self.az = self.z_acc_int / (2**14 -1)
+        #TODO: conditional logic for different measurement ranges
+        return self.az
 
 
     def get_accels (self):
@@ -225,3 +244,22 @@ class MMA845x:
 
 
 
+if __name__ == "__main__":
+    I2Cbus = pyb.I2C (1, pyb.I2C.CONTROLLER)
+    addresses = pyb.I2C.scan (I2Cbus)
+    for addr in addresses:
+        print(hex(addr))
+
+    ACC_I2C_ADDR = micropython.const (0x1d)
+    
+    acc = MMA845x(I2Cbus, ACC_I2C_ADDR)  #accel_range= RANGE_2g by default
+    acc.active()
+    
+    while(True):
+        print(f"x: {acc.get_ax()}g")
+        print(f"y: {acc.get_ay()}g")
+        print(f"z: {acc.get_az()}g")
+        print(acc.get_accels())
+        time.sleep(.5)
+    
+    

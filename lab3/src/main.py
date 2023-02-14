@@ -1,15 +1,15 @@
 """!
-@file basic_tasks.py
-    This file contains a demonstration program that runs some tasks, an
-    inter-task shared variable, and a queue. The tasks don't really @b do
-    anything; the example just shows how these elements are created and run.
+@file main.py
+    This file contains main operations of ME405 lab3 as adapted from basictasks.py
+    from ME405 source library. The file creates and runs two tasks to independently
+    and simultaneously run two position controlled DC motors.
+
 
 @author JR Ridgely
-@date   2021-Dec-15 JRR Created from the remains of previous example
-@copyright (c) 2015-2021 by JR Ridgely and released under the GNU
-    Public License, Version 2. 
+@author Caleb Erlenborn
+@author Miles Alderman
+@date   2/13/2023
 """
-
 import gc
 import pyb
 import cotask
@@ -20,13 +20,16 @@ import motor_driver as md
 import feedback_control as fc
 
 def motor1_task_fun():
-    ## Create Motor Driver Obejct
+"""!
+    Task which performs position control on motor 1.
+"""
+    ## Create Motor Driver Obejct for 1A motor
     en_pin = pyb.Pin.board.PA10
     in1pin = pyb.Pin.board.PB4
     in2pin = pyb.Pin.board.PB5
     timer = 3
     moe = md.MotorDriver (en_pin, in1pin, in2pin, timer)
-    ## Create Encoder Driver Object
+    ## Create Encoder Driver Object for encoder with pins B6/B7
     enc_pin1 = pyb.Pin (pyb.Pin.board.PB6, pyb.Pin.IN)
     enc_pin2 = pyb.Pin (pyb.Pin.board.PB7, pyb.Pin.IN)
     timer = 4
@@ -42,9 +45,8 @@ def motor1_task_fun():
     encd.zero() #zeroes encoder posn
     
     while True:
-        ## Start time plotting perposes
-        t = pyb.millis() - start_time
-        if t<2000:   #record data for 1 second
+        t = pyb.millis() - start_time	# time from last reset
+        if t<2000:   #record data for 2 second
             encd.read() #runs encoder reader, updating object property
             mc.run(encd.position) #runs controller based on latest position reading
             moe.set_duty_cycle (mc.PWM) #set new duty cycle based on controller result
@@ -60,7 +62,10 @@ def motor1_task_fun():
         yield 0        
  
 def motor2_task_fun():
-    ## Create Motor Driver Obejct
+"""!
+    Task which performs position control on motor 2.
+"""
+## Create Motor Driver Obejct for 1B motor
     en_pin = pyb.Pin.board.PC1
     in1pin = pyb.Pin.board.PA0
     in2pin = pyb.Pin.board.PA1
@@ -101,41 +106,8 @@ def motor2_task_fun():
             start_time = pyb.millis()
         yield 0 
 
-def task1_fun(shares):
-    """!
-    Task which puts things into a share and a queue.
-    @param shares A list holding the share and queue used by this task
-    """
-    # Get references to the share and queue which have been passed to this task
-    my_share, my_queue = shares
 
-    counter = 0
-    while True:
-        my_share.put(counter)
-        my_queue.put(counter)
-        counter += 1
-        yield 0
-
-
-def task2_fun(shares):
-    """!
-    Task which takes things out of a queue and share and displays them.
-    @param shares A tuple of a share and queue from which this task gets data
-    """
-    # Get references to the share and queue which have been passed to this task
-    the_share, the_queue = shares
-
-    while True:
-        # Show everything currently in the queue and the value in the share
-        print(f"Share: {the_share.get ()}, Queue: ", end='')
-        while q0.any():
-            print(f"{the_queue.get ()} ", end='')
-        print('')
-
-        yield 0
-
-
-# This code creates a share, a queue, and two tasks, then starts the tasks. The
+# This code creates two tasks, then starts the tasks. The
 # tasks run until somebody presses ENTER, at which time the scheduler stops and
 # printouts show diagnostic information about the tasks, share, and queue.
 if __name__ == "__main__":

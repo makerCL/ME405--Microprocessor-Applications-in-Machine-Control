@@ -27,15 +27,17 @@ def task1_fun(shares):
     """
     # Get references to the share and queue which have been passed to this task
     my_share, my_queue = shares
-    I2Cbus = pyb.I2C (1, pyb.I2C.CONTROLLER)
+
+    ##I2C initialization
+    I2Cbus = pyb.I2C (1, pyb.I2C.CONTROLLER) 
     addresses = pyb.I2C.scan (I2Cbus)
-    ACC_I2C_ADDR = micropython.const (0x1d)
+    ACC_I2C_ADDR = micropython.const (0x1d) #MMA8451 addr
     acc = accel.MMA845x(I2Cbus, ACC_I2C_ADDR)  #accel_range= RANGE_2g by default
-    acc.active()
+    acc.active() #make I2C transmission active
     
     while True:
-        for a in acc.get_accels(): #in order x, y, then z
-            my_queue.put(a) 
+        for a in acc.get_accels(): #in order x, y, then z, withdrawn in same order since FIFO
+            my_queue.put(a)  
         yield 0
 
 
@@ -47,8 +49,10 @@ def task2_fun(shares):
     # Get references to the share and queue which have been passed to this task
     the_share, the_queue = shares
 
+    #Fetch and print the x, y, z accelerations from the queue
     while True:
         if q0.any():
+            #Order in queue was x, y, z, and FIFO
             print(f"ax= {the_queue.get ()} ", end='')
             print(f"ay= {the_queue.get ()} ", end='')
             print(f"az= {the_queue.get ()} ", end='')

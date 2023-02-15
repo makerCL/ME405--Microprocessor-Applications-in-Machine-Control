@@ -150,8 +150,8 @@ class MMA845x:
         #Read data from the 2 X_acc registers
         self.x_acc_int = int.from_bytes(self.i2c.mem_read(2, self.addr, OUT_X_MSB), 'big')
 
-        if self.x_acc_int > 32767:
-            self.x_acc_int -= 2**16
+        if self.x_acc_int > 32767:          #if the number is larger than the largest possible signed integer, it is negative
+            self.x_acc_int -= 2**16         #conversion from integer converted from twos complement 
     
         return self.x_acc_int
 
@@ -164,8 +164,8 @@ class MMA845x:
         #Read data from the 2 X_acc registers
         self.y_acc_int = int.from_bytes(self.i2c.mem_read(2, self.addr, OUT_Y_MSB), 'big')
 
-        if self.y_acc_int > 32767:
-            self.y_acc_int -= 2**16
+        if self.y_acc_int > 32767:          #if the number is larger than the largest possible signed integer, it is negative
+            self.y_acc_int -= 2**16         #conversion from integer converted from twos complement 
     
         return self.y_acc_int
 
@@ -177,8 +177,8 @@ class MMA845x:
 
         self.z_acc_int = int.from_bytes(self.i2c.mem_read(2, self.addr, OUT_Z_MSB), 'big')
 
-        if self.z_acc_int > 32767:
-            self.z_acc_int -= 2**16
+        if self.z_acc_int > 32767:          #if the number is larger than the largest possible signed integer, it is negative
+            self.z_acc_int -= 2**16         #conversion from integer converted from twos complement 
 
         return self.z_acc_int
 
@@ -189,7 +189,7 @@ class MMA845x:
         @return The measured X acceleration in g's """
 
         self.get_ax_bits()
-        self.ax = self.x_acc_int / (2**14 -1)
+        self.ax = self.x_acc_int / (2**14 -1)       # there are 2^16 gradations, divided over +/- 4g. So 2^16 /4
         #TODO: conditional logic for different measurement ranges
         return self.ax
 
@@ -201,7 +201,7 @@ class MMA845x:
         @return The measured Y acceleration in g's """
         
         self.get_ay_bits()
-        self.ay = self.y_acc_int / (2**14 -1)
+        self.ay = self.y_acc_int / (2**14 -1)       # there are 2^16 gradations, divided over +/- 4g. So 2^16 /4
         #TODO: conditional logic for different measurement ranges
         return self.ay
 
@@ -212,7 +212,7 @@ class MMA845x:
         measurement is adjusted for the range (2g, 4g, or 8g) setting.
         @return The measured Z acceleration in g's """
         self.get_az_bits()
-        self.az = self.z_acc_int / (2**14 -1)
+        self.az = self.z_acc_int / (2**14 -1)       # there are 2^16 gradations, divided over +/- 4g. So 2^16 /4
         #TODO: conditional logic for different measurement ranges
         return self.az
 
@@ -245,15 +245,17 @@ class MMA845x:
 
 
 if __name__ == "__main__":
+    '''
+    #Find and print address of connected I2C devices
     I2Cbus = pyb.I2C (1, pyb.I2C.CONTROLLER)
     addresses = pyb.I2C.scan (I2Cbus)
     for addr in addresses:
         print(hex(addr))
-
+    '''
     ACC_I2C_ADDR = micropython.const (0x1d)
     
     acc = MMA845x(I2Cbus, ACC_I2C_ADDR)  #accel_range= RANGE_2g by default
-    acc.active()
+    acc.active() #must make the device active before proper reading can occur
     
     while(True):
         print(f"x: {acc.get_ax()}g")

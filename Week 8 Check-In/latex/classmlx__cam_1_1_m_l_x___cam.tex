@@ -1,0 +1,157 @@
+\hypertarget{classmlx__cam_1_1_m_l_x___cam}{}\doxysection{mlx\+\_\+cam.\+MLX\+\_\+\+Cam Class Reference}
+\label{classmlx__cam_1_1_m_l_x___cam}\index{mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}}
+
+
+Class which wraps an MLX90640 thermal infrared camera driver to make it easier to grab and use an image.  
+
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classmlx__cam_1_1_m_l_x___cam_a95105abd546aee6585eb199555c730ba}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, i2c, address=0x33, pattern=Chess\+Pattern, width=NUM\+\_\+\+COLS, height=NUM\+\_\+\+ROWS)
+\begin{DoxyCompactList}\small\item\em Set up an MLX90640 camera. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmlx__cam_1_1_m_l_x___cam_a81414599e49572ccef6b84bf79720c0b}{ascii\+\_\+image}} (self, array, pixel=\char`\"{}██\char`\"{}, textcolor=\char`\"{}0;180;0\char`\"{})
+\begin{DoxyCompactList}\small\item\em Show low-\/resolution camera data as shaded pixels on a text screen. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmlx__cam_1_1_m_l_x___cam_a2cbed5a475d4f37117356caab5e3b6c8}{ascii\+\_\+art}} (self, array)
+\begin{DoxyCompactList}\small\item\em Show a data array from the IR image as ASCII art. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmlx__cam_1_1_m_l_x___cam_ae2adf74abddcae23d14424f52548359f}{get\+\_\+csv}} (self, array, limits=None)
+\begin{DoxyCompactList}\small\item\em Generate a string containing image data in CSV format. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{classmlx__cam_1_1_m_l_x___cam_a8bb72d68883cd21e0b3d9559c9faa1dd}{get\+\_\+image}} (self)
+\begin{DoxyCompactList}\small\item\em Get one image from a MLX90640 camera. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_ab54cab49d3896537eec5516972c90804}\label{classmlx__cam_1_1_m_l_x___cam_ab54cab49d3896537eec5516972c90804}} 
+str {\bfseries asc} = \char`\"{} -\/.\+:=+$\ast$\#\%@\char`\"{}
+\begin{DoxyCompactList}\small\item\em A \char`\"{}standard\char`\"{} set of characters of different densities to make ASCII art. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a99be4162b9f2d1005b1ab54fc6e98977}\label{classmlx__cam_1_1_m_l_x___cam_a99be4162b9f2d1005b1ab54fc6e98977}} 
+{\bfseries \+\_\+i2c}
+\begin{DoxyCompactList}\small\item\em The I2C bus to which the camera is attached. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a403e8a733d26d5a0f4f1e97f14766431}\label{classmlx__cam_1_1_m_l_x___cam_a403e8a733d26d5a0f4f1e97f14766431}} 
+{\bfseries \+\_\+addr}
+\begin{DoxyCompactList}\small\item\em The address of the camera on the I2C bus. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a46c9b6e794cd1a9fa96f3b1cbd2b69fe}\label{classmlx__cam_1_1_m_l_x___cam_a46c9b6e794cd1a9fa96f3b1cbd2b69fe}} 
+{\bfseries \+\_\+pattern}
+\begin{DoxyCompactList}\small\item\em The pattern for reading the camera, usually Chess\+Pattern. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a1abc3298153b1808855811670b9a428c}\label{classmlx__cam_1_1_m_l_x___cam_a1abc3298153b1808855811670b9a428c}} 
+{\bfseries \+\_\+width}
+\begin{DoxyCompactList}\small\item\em The width of the image in pixels, which should be 32. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a3308470a1edba9a20d047c3f75dcacb9}\label{classmlx__cam_1_1_m_l_x___cam_a3308470a1edba9a20d047c3f75dcacb9}} 
+{\bfseries \+\_\+height}
+\begin{DoxyCompactList}\small\item\em The height of the image in pixels, which should be 24. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a57a4527e587a2afadf46f468854eff4a}\label{classmlx__cam_1_1_m_l_x___cam_a57a4527e587a2afadf46f468854eff4a}} 
+{\bfseries \+\_\+camera}
+\item 
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a26bbcb9ea8bb48ee8e622f2b1d17b327}\label{classmlx__cam_1_1_m_l_x___cam_a26bbcb9ea8bb48ee8e622f2b1d17b327}} 
+{\bfseries \+\_\+image}
+\begin{DoxyCompactList}\small\item\em A local reference to the image object within the camera driver. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Class which wraps an MLX90640 thermal infrared camera driver to make it easier to grab and use an image. 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a95105abd546aee6585eb199555c730ba}\label{classmlx__cam_1_1_m_l_x___cam_a95105abd546aee6585eb199555c730ba}} 
+\index{mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def mlx\+\_\+cam.\+MLX\+\_\+\+Cam.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{i2c,  }\item[{}]{address = {\ttfamily 0x33},  }\item[{}]{pattern = {\ttfamily ChessPattern},  }\item[{}]{width = {\ttfamily NUM\+\_\+COLS},  }\item[{}]{height = {\ttfamily NUM\+\_\+ROWS} }\end{DoxyParamCaption})}
+
+
+
+Set up an MLX90640 camera. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em i2c} & An I2C bus which has been set up to talk to the camera; this must be a bus object which has already been set up \\
+\hline
+{\em address} & The address of the camera on the I2C bus (default 0x33) \\
+\hline
+{\em pattern} & The way frames are interleaved, as we read only half the pixels at a time (default Chess\+Pattern) \\
+\hline
+{\em width} & The width of the image in pixels; leave it at default \\
+\hline
+{\em height} & The height of the image in pixels; leave it at default \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a2cbed5a475d4f37117356caab5e3b6c8}\label{classmlx__cam_1_1_m_l_x___cam_a2cbed5a475d4f37117356caab5e3b6c8}} 
+\index{mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}!ascii\_art@{ascii\_art}}
+\index{ascii\_art@{ascii\_art}!mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}}
+\doxysubsubsection{\texorpdfstring{ascii\_art()}{ascii\_art()}}
+{\footnotesize\ttfamily def mlx\+\_\+cam.\+MLX\+\_\+\+Cam.\+ascii\+\_\+art (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{array }\end{DoxyParamCaption})}
+
+
+
+Show a data array from the IR image as ASCII art. 
+
+Each character is repeated twice so the image isn\textquotesingle{}t squished laterally. A code of \char`\"{}$>$$<$\char`\"{} indicates an error, probably caused by a bad pixel in the camera. 
+\begin{DoxyParams}{Parameters}
+{\em array} & The array to be shown, probably {\ttfamily image.\+v\+\_\+ir} \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a81414599e49572ccef6b84bf79720c0b}\label{classmlx__cam_1_1_m_l_x___cam_a81414599e49572ccef6b84bf79720c0b}} 
+\index{mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}!ascii\_image@{ascii\_image}}
+\index{ascii\_image@{ascii\_image}!mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}}
+\doxysubsubsection{\texorpdfstring{ascii\_image()}{ascii\_image()}}
+{\footnotesize\ttfamily def mlx\+\_\+cam.\+MLX\+\_\+\+Cam.\+ascii\+\_\+image (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{array,  }\item[{}]{pixel = {\ttfamily \char`\"{}██\char`\"{}},  }\item[{}]{textcolor = {\ttfamily \char`\"{}0;180;0\char`\"{}} }\end{DoxyParamCaption})}
+
+
+
+Show low-\/resolution camera data as shaded pixels on a text screen. 
+
+The data is printed as a set of characters in columns for the number of rows in the camera\textquotesingle{}s image size. This function is intended for testing an MLX90640 thermal infrared sensor.
+
+A pair of extended ACSII filled rectangles is used by default to show each pixel so that the aspect ratio of the display on screens isn\textquotesingle{}t too smushed. Each pixel is colored using ANSI terminal escape codes which work in only some programs such as Pu\+TTY. If shown in simpler terminal programs such as the one used in Thonny, the display just shows a bunch of pixel symbols with no difference in shading (boring).
+
+A simple auto-\/brightness scaling is done, setting the lowest brightness of a filled block to 0 and the highest to 255. If there are bad pixels, this can reduce contrast in the rest of the image.
+
+After the printing is done, character color is reset to a default of medium-\/brightness green, or something else if chosen. 
+\begin{DoxyParams}{Parameters}
+{\em array} & An array of (self.\+\_\+width $\ast$ self.\+\_\+height) pixel values \\
+\hline
+{\em pixel} & Text which is shown for each pixel, default being a pair of extended-\/\+ASCII blocks (code 219) \\
+\hline
+{\em textcolor} & The color to which printed text is reset when the image has been finished, as a string \char`\"{}$<$r$>$;$<$g$>$;$<$b$>$\char`\"{} with each letter representing the intensity of red, green, and blue from 0 to 255 \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_ae2adf74abddcae23d14424f52548359f}\label{classmlx__cam_1_1_m_l_x___cam_ae2adf74abddcae23d14424f52548359f}} 
+\index{mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}!get\_csv@{get\_csv}}
+\index{get\_csv@{get\_csv}!mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}}
+\doxysubsubsection{\texorpdfstring{get\_csv()}{get\_csv()}}
+{\footnotesize\ttfamily def mlx\+\_\+cam.\+MLX\+\_\+\+Cam.\+get\+\_\+csv (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{array,  }\item[{}]{limits = {\ttfamily None} }\end{DoxyParamCaption})}
+
+
+
+Generate a string containing image data in CSV format. 
+
+This function generates a set of lines, each having one row of image data in Comma Separated Variable format. The lines can be printed or saved to a file using a {\ttfamily for} loop. 
+\begin{DoxyParams}{Parameters}
+{\em array} & The array of data to be presented \\
+\hline
+{\em limits} & A 2-\/iterable containing the maximum and minimum values to which the data should be scaled, or {\ttfamily None} for no scaling \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classmlx__cam_1_1_m_l_x___cam_a8bb72d68883cd21e0b3d9559c9faa1dd}\label{classmlx__cam_1_1_m_l_x___cam_a8bb72d68883cd21e0b3d9559c9faa1dd}} 
+\index{mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}!get\_image@{get\_image}}
+\index{get\_image@{get\_image}!mlx\_cam.MLX\_Cam@{mlx\_cam.MLX\_Cam}}
+\doxysubsubsection{\texorpdfstring{get\_image()}{get\_image()}}
+{\footnotesize\ttfamily def mlx\+\_\+cam.\+MLX\+\_\+\+Cam.\+get\+\_\+image (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Get one image from a MLX90640 camera. 
+
+Grab one image from the given camera and return it. Both subframes (the odd checkerboard portions of the image) are grabbed and combined. This assumes that the camera is in the Chess\+Pattern (default) mode as it probably should be. \begin{DoxyReturn}{Returns}
+A reference to the image object we\textquotesingle{}ve just filled with data 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/\mbox{\hyperlink{mlx__cam_8py}{mlx\+\_\+cam.\+py}}\end{DoxyCompactItemize}

@@ -182,6 +182,49 @@ class MLX_Cam:
 
         return image
 
+    def serial_send(self, array, limits=None):
+        """!
+        @brief   Send thermal image via serial to computer for heatmap display 
+
+        """
+        if limits and len(limits) == 2:
+            scale = (limits[1] - limits[0]) / (max(array) - min(array))
+            offset = limits[0] - min(array)
+        else:
+            offset = 0.0
+            scale = 1.0
+
+        print(array)
+        minny = min(array)
+        scale = 255.0 / (max(array) - minny)
+        offset = 0.0
+        for row in range(self._height):
+            line = ""
+            for col in range(self._width):
+                pix = int((array[row * self._width + (self._width - col - 1)]
+                          * scale) + offset)
+                if col:
+                    line += ","
+                line += f"{pix}"
+            line += "\r\n"
+            yield line
+
+    def init_VCP(self):
+        print("Starting nucleo send")
+        try:
+            self.vcp = pyb.USB_VCP()
+            pyb.repl_uart(None)	# Turn off the REPL on UART2
+            self.u2 = pyb.UART(2, baudrate=115200)      # Set up the second USB-serial port
+        except:
+            print("Problem openning VCP/UART")
+        else:
+            if self.vcp.isconnected():
+                print("VCP connected")
+            else:
+                print("VCP ERROR")
+
+
+
 
 # The test code sets up the sensor, then grabs and shows an image in a terminal
 # every ten and a half seconds or so.
@@ -212,6 +255,10 @@ if __name__ == "__main__":
     # Create the camera object and set it up in default mode
     camera = MLX_Cam(i2c_bus)
 
+
+    camera.init_VCP()
+    
+
     while True:
         try:
             # Get and image and see how long it takes to grab that image
@@ -224,8 +271,17 @@ if __name__ == "__main__":
             # Display pixellated grayscale or numbers in CSV format; the CSV
             # could also be written to a file. Spreadsheets, Matlab(tm), or
             # CPython can read CSV and make a decent false-color heat plot.
-            show_image = True
+            show_image = False
             show_csv = False
+            serial_send = True
+            
+            if serial_send:
+                camera.u2.write("Data_Start\r\n")
+                for line in camera.serial_send(image.v_ir, limits=(0, 99)):
+                    #print(line)
+                    camera.u2.write(line)
+                camera.u2.write("Data_Stop\r\n")
+            '''    
             if show_image:
                 camera.ascii_image(image.buf)
             elif show_csv:
@@ -233,7 +289,8 @@ if __name__ == "__main__":
                     print(line)
             else:
                 camera.ascii_art(image.v_ir)
-            time.sleep_ms(10000)
+            '''
+            time.sleep_ms(5000)
 
         except KeyboardInterrupt:
             break

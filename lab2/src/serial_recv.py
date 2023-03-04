@@ -25,7 +25,7 @@ print("Attempting Port Receive...")
 transfer_started = False
 
 ##open the serial port to receive
-with serial.Serial ('/dev/cu.usbmodem2103', 115200) as s_port:
+with serial.Serial ('/dev/cu.usbmodem1103', 115200) as s_port:
     while(True):
         while(True):
             if s_port.in_waiting:
@@ -56,8 +56,11 @@ with serial.Serial ('/dev/cu.usbmodem2103', 115200) as s_port:
 
         #Plot the data!
         plt.plot(x_pts,y_pts)
-        plt.xlabel("Time (s)")
+        plt.xlabel("Time (ms)")
         plt.ylabel("Encoder Position (encoder counts)")
-        plt.title(f"Lab 2 Plot, k_p = 0.02")
+        plt.title(f"Lab 3 Plot: k_p = 0.02; controller_freq = 100hz")
         plt.show()
+        x_pts = []
+        y_pts = []
+        break
 

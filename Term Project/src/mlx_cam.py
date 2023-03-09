@@ -24,7 +24,8 @@ from machine import Pin, I2C
 from mlx90640 import MLX90640
 from mlx90640.calibration import NUM_ROWS, NUM_COLS, IMAGE_SIZE, TEMP_K
 from mlx90640.image import ChessPattern, InterleavedPattern
-
+from ulab import numpy as np
+import pyb
 
 class MLX_Cam:
     """!
@@ -63,105 +64,8 @@ class MLX_Cam:
         ## A local reference to the image object within the camera driver
         self._image = self._camera.image
 
-
-    def ascii_image(self, array, pixel="██", textcolor="0;180;0"):
-        """!
-        @brief   Show low-resolution camera data as shaded pixels on a text
-                 screen.
-        @details The data is printed as a set of characters in columns for the
-                 number of rows in the camera's image size. This function is
-                 intended for testing an MLX90640 thermal infrared sensor.
-
-                 A pair of extended ACSII filled rectangles is used by default
-                 to show each pixel so that the aspect ratio of the display on
-                 screens isn't too smushed. Each pixel is colored using ANSI
-                 terminal escape codes which work in only some programs such as
-                 PuTTY.  If shown in simpler terminal programs such as the one
-                 used in Thonny, the display just shows a bunch of pixel
-                 symbols with no difference in shading (boring).
-
-                 A simple auto-brightness scaling is done, setting the lowest
-                 brightness of a filled block to 0 and the highest to 255. If
-                 there are bad pixels, this can reduce contrast in the rest of
-                 the image.
-
-                 After the printing is done, character color is reset to a
-                 default of medium-brightness green, or something else if
-                 chosen.
-        @param   array An array of (self._width * self._height) pixel values
-        @param   pixel Text which is shown for each pixel, default being a pair
-                 of extended-ASCII blocks (code 219)
-        @param   textcolor The color to which printed text is reset when the
-                 image has been finished, as a string "<r>;<g>;<b>" with each
-                 letter representing the intensity of red, green, and blue from
-                 0 to 255
-        """
-        minny = min(array)
-        scale = 255.0 / (max(array) - minny)
-        for row in range(self._height):
-            for col in range(self._width):
-                pix = int((array[row * self._width + (self._width - col - 1)]
-                           - minny) * scale)
-                print(f"\033[38;2;{pix};{pix};{pix}m{pixel}", end='')
-            print(f"\033[38;2;{textcolor}m")
-
-
-    ## A "standard" set of characters of different densities to make ASCII art
-    asc = " -.:=+*#%@"
-
-
-    def ascii_art(self, array):
-        """!
-        @brief   Show a data array from the IR image as ASCII art.
-        @details Each character is repeated twice so the image isn't squished
-                 laterally. A code of "><" indicates an error, probably caused
-                 by a bad pixel in the camera. 
-        @param   array The array to be shown, probably @c image.v_ir
-        """
-        scale = 10 / (max(array) - min(array))
-        offset = -min(array)
-        for row in range(self._height):
-            line = ""
-            for col in range(self._width):
-                pix = int((array[row * self._width + (self._width - col - 1)]
-                           + offset) * scale)
-                try:
-                    the_char = MLX_Cam.asc[pix]
-                    print(f"{the_char}{the_char}", end='')
-                except IndexError:
-                    print("><", end='')
-            print('')
-        return
-
-
-    def get_csv(self, array, limits=None):
-        """!
-        @brief   Generate a string containing image data in CSV format.
-        @details This function generates a set of lines, each having one row of
-                 image data in Comma Separated Variable format. The lines can
-                 be printed or saved to a file using a @c for loop.
-        @param   array The array of data to be presented
-        @param   limits A 2-iterable containing the maximum and minimum values
-                 to which the data should be scaled, or @c None for no scaling
-        """
-        if limits and len(limits) == 2:
-            scale = (limits[1] - limits[0]) / (max(array) - min(array))
-            offset = limits[0] - min(array)
-        else:
-            offset = 0.0
-            scale = 1.0
-        for row in range(self._height):
-            line = ""
-            for col in range(self._width):
-                pix = int((array[row * self._width + (self._width - col - 1)]
-                          * scale) + offset)
-                if col:
-                    line += ","
-                line += f"{pix}"
-#             line += "\r\n"
-            yield line
-        return
-
+        #initialize image data array
+        self.target_arr = np.empty((24, 32), dtype=np.uint8)
 
     def get_image(self):
         """!
@@ -182,33 +86,55 @@ class MLX_Cam:
 
         return image
 
-    def serial_send(self, array, limits=None):
+    def serial_send(self, array):
         """!
         @brief   Send thermal image via serial to computer for heatmap display 
 
         """
-        if limits and len(limits) == 2:
-            scale = (limits[1] - limits[0]) / (max(array) - min(array))
-            offset = limits[0] - min(array)
-        else:
-            offset = 0.0
-            scale = 1.0
-
         print(array)
-        minny = min(array)
-        scale = 255.0 / (max(array) - minny)
-        offset = 0.0
+
         for row in range(self._height):
             line = ""
             for col in range(self._width):
-                pix = int((array[row * self._width + (self._width - col - 1)]
-                          * scale) + offset)
+                pix = int(array[row * self._width + (self._width - col - 1)])
                 if col:
                     line += ","
                 line += f"{pix}"
             line += "\r\n"
             yield line
 
+
+    def target(self, array):
+        if len(array) != self._height * self._width:
+            print("Invalid Array size")
+            return
+        #TODO: no "astype" funciton in ulab numpy so need a new way to round before assigning to numpy array.
+        #Will have to change drivers to just make uints instead
+        self.target_arr = np.array(array, dtype=np.int8).reshape((self._height, self._width))
+        print(self.target_arr)
+        
+        max_temp = np.amax(self.target_arr)
+        min_temp = np.amin(self.target_arr)
+
+        print(f"np_arr[0][0] = {self.target_arr[0][0]}")
+        print(f"np_arr[1][4] = {self.target_arr[1][4]}")
+        print(f"np_arr[23][32] = {self.target_arr[23][32]}")
+        print(f"np_arr[12][12] = {self.target_arr[12][12]}")
+        print(f"np_arr[5][6] = {self.target_arr[5][6]}")
+
+        scaled_array = (self.target_arr - min_temp) / (max_temp - min_temp) * 255
+
+        #Create mask where the heat is higher than a certain value
+        #TODO: future iteration the mask would make more sense as absolute temperature.
+        temp_mask = (scaled_array > 150)
+
+        #Find centroid of target by averaging the indexes of filtered points
+        centr_y, centr_x = np.array(np.where(temp_mask)).mean(axis=1)
+
+        # Ideal Setpoint as seen on thermal camera
+        yaw_center = self._width / 2 #centered, pixels from left
+        pitch_center = self._height / 2 #cetnered, pixels top; may change with distance/velocity
+        
     def init_VCP(self):
         print("Starting nucleo send")
         try:
@@ -222,7 +148,7 @@ class MLX_Cam:
                 print("VCP connected")
             else:
                 print("VCP ERROR")
-
+        
 
 
 
@@ -266,30 +192,19 @@ if __name__ == "__main__":
             begintime = time.ticks_ms()
             image = camera.get_image()
             print(f" {time.ticks_diff(time.ticks_ms(), begintime)} ms")
-
-            # Can show image.v_ir, image.alpha, or image.buf; image.v_ir best?
-            # Display pixellated grayscale or numbers in CSV format; the CSV
-            # could also be written to a file. Spreadsheets, Matlab(tm), or
-            # CPython can read CSV and make a decent false-color heat plot.
-            show_image = False
-            show_csv = False
+            
             serial_send = True
             
             if serial_send:
                 camera.u2.write("Data_Start\r\n")
-                for line in camera.serial_send(image.v_ir, limits=(0, 99)):
+                for line in camera.serial_send(image.v_ir):
                     #print(line)
                     camera.u2.write(line)
+
                 camera.u2.write("Data_Stop\r\n")
-            '''    
-            if show_image:
-                camera.ascii_image(image.buf)
-            elif show_csv:
-                for line in camera.get_csv(image.v_ir, limits=(0, 99)):
-                    print(line)
-            else:
-                camera.ascii_art(image.v_ir)
-            '''
+
+            camera.target(image.v_ir)
+
             time.sleep_ms(5000)
 
         except KeyboardInterrupt:

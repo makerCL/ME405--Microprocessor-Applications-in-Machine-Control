@@ -64,8 +64,9 @@ class MLX_Cam:
         ## A local reference to the image object within the camera driver
         self._image = self._camera
 
-        #initialize image data array
-        self.target_arr = np.empty((24, 32), dtype=np.uint8)
+        #Field of view of camera
+        self.FOV_yaw = 57 # Degrees
+        self.FOV_pitch  = 30 #Degrees #TODO: FIX THESE. PLACEHOLDER
 
     def get_image(self):
         """!
@@ -91,7 +92,7 @@ class MLX_Cam:
         @brief   Send thermal image via serial to computer for heatmap display 
 
         """
-        print(array)
+        #print(array)
         for row in range(self._height):
             line = ""
             for col in range(self._width):
@@ -104,39 +105,51 @@ class MLX_Cam:
 
 
     def target(self, array):
-        print("TARGET (array)")
 
-        print(array)
-        if len(array) != self._height * self._width:
-            print("Invalid Array size")
-            return
-        #TODO: no "astype" funciton in ulab numpy so need a new way to round before assigning to numpy array.
-        #Will have to change drivers to just make uints instead
-        self.target_arr = np.array(array, dtype=np.int16).reshape((self._height, self._width))
-        print("TARGET ARRAY")
-        print(self.target_arr)
-
-        print(f"np_arr[0][0] = {self.target_arr[0][0]}")
-        print(f"np_arr[1][4] = {self.target_arr[1][4]}")
-        print(f"np_arr[23][32] = {self.target_arr[23][31]}")
-        print(f"np_arr[12][12] = {self.target_arr[12][12]}")
-        print(f"np_arr[5][6] = {self.target_arr[5][6]}")
-
-        max_temp = np.max(self.target_arr)
-        min_temp = np.min(self.target_arr)
-
-        scaled_array = (self.target_arr - min_temp) / (max_temp - min_temp) * 255
-
-        #Create mask where the heat is higher than a certain value
-        #TODO: future iteration the mask would make more sense as absolute temperature.
-        temp_mask = (scaled_array > 150)
-
-        #Find centroid of target by averaging the indexes of filtered points
-        centr_y, centr_x = np.array(np.where(temp_mask)).mean(axis=1)
 
         # Ideal Setpoint as seen on thermal camera
         yaw_center = self._width / 2 #centered, pixels from left
         pitch_center = self._height / 2 #cetnered, pixels top; may change with distance/velocity
+
+        # list of column average heats
+        col_avgs = []
+
+        # Add to list
+        for column in range(self._width):
+            print()
+            col = []
+            for i in range(0, self._width * self._height, self._width):
+                col.append(array[i + column])
+
+            col_avgs.append(sum(col) / len(col))
+
+        # Index of column that has max avg value
+        max_col_idx = col_avgs.index(max(col_avgs))
+
+        # Column that has maximum average heat
+        max_col = []
+
+        # Extract column
+        for i in range(0, self._height*self._width, self._width):
+            max_col.append(array[i])
+
+        #Find max value from the top of the row
+        vert_max = max_col.index(max(max_col))
+        print(vert_max)
+
+        #pixels right of center
+        delta_yaw_pix = max_col_idx - yaw_center
+
+        #pixels below center
+        delta_pitch_pix = vert_max - pitch_center 
+
+        # Calculate angle delta
+        angle_delta_yaw = delta_yaw_pix / self._width * self.FOV_yaw
+        angle_delta_pitch = delta_pitch_pix / self._height * self.FOV_pitch
+
+        #NOTE: Pitch is kinda sketchy. Consider averaging indexes of top 3 points, or have fixed aim point
+        return angle_delta_yaw, angle_delta_pitch
+
         
     def init_VCP(self):
         print("Starting nucleo send")
@@ -206,8 +219,9 @@ if __name__ == "__main__":
 
                 camera.u2.write("Data_Stop\r\n")
 
-            camera.target(image.pix)
-
+            angle_delta_yaw, angle_delta_pitch = camera.target(image.pix)
+            print(f"angle_delta_yaw = {angle_delta_yaw} degrees")
+            print(f"angle_delta_pitch = {angle_delta_pitch} degrees")
             time.sleep_ms(5000)
 
         except KeyboardInterrupt:

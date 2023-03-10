@@ -15,44 +15,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+
+
 start = time.time()
 
-port_path = '/dev/cu.usbmodem2103'
+width  = 32
+height = 24
+
+# Ideal Setpoint as seen on thermal camera
+yaw_center = width / 2 #centered, pixels from left
+pitch_center = height / 2 #cetnered, pixels top; may change with distance/velocity
+
+
+port_path = '/dev/cu.usbmodem1403'
 print(f"Attempting Port Receive on {port_path}")
 
-def heatmap(data, width = 32, height = 24):
+def heatmap(data, yaw_aim, pitch_aim):
     
     plt.close()
     hm = sns.heatmap(data, cmap = 'coolwarm')
 
     ##TODO: make this update live
     #https://www.geeksforgeeks.org/how-to-update-a-plot-on-same-figure-during-the-loop/
-    max_temp = np.amax(data)
-    min_temp = np.amin(data)
 
-    scaled_array = (data - min_temp) / (max_temp - min_temp) * 255
-    print(f"np_arr[0][0] = {data[0][0]}")
-    print(f"np_arr[1][4] = {data[1][4]}")
-    print(f"np_arr[23][32] = {data[23][31]}")
-    print(f"np_arr[12][12] = {data[12][12]}")
-    print(f"np_arr[5][6] = {data[5][6]}")
-    #Create mask where the heat is higher than a certain value
-    #TODO: maybe this would be better if it was absolute temperatures instead? anything about 80 F?
-    temp_mask = (scaled_array > 150)
-
-    #Find centroid of target by averaging the indexes of filtered points
-    centr_y, centr_x = np.array(np.where(temp_mask)).mean(axis=1)
-
-    plt.scatter(centr_x, centr_y, marker='o', s=100, c='chartreuse')
-
-    # Ideal Setpoint as seen on thermal camera
-    yaw_center = width / 2 #centered, pixels from left
-    pitch_center = height / 2 #cetnered, pixels top; may change with distance/velocity
-    
+    plt.scatter(yaw_aim, pitch_aim, marker='o', s=100, c='chartreuse')
     plt.show()
-
-    #angle = (0,0)
-    #yield (angle)
     
 reading_data = False
 
@@ -66,13 +53,41 @@ with serial.Serial (port_path, 115200) as s_port:
 
                 if charIn == b'Data_Start\r\n':
                     reading_data = True
+                    array = []
                 elif charIn == b'Data_Stop\r\n':
                     print(data)  # print the updated data array
                     #print(data.shape)
                     print("\n\n\n\n")
                     reading_data = False
                     
-                    heatmap(data)
+                    # list of column average heats
+                    col_avgs = []
+
+                    # Add to list
+                    for column in range(width):
+                        print()
+                        col = []
+                        for i in range(0, width * height, width):
+                            col.append(array[i + column])
+
+                        col_avgs.append(sum(col) / len(col))
+
+                    # Index of column that has max avg value
+                    max_col_idx = col_avgs.index(max(col_avgs))
+
+                    # Column that has maximum average heat
+                    max_col = []
+
+                    # Extract column
+                    for i in range(0, height*width, width):
+                        max_col.append(array[i])
+
+                    #Find max value from the top of the row
+                    vert_max = max_col.index(max(max_col))
+                    print(vert_max)
+
+                    # PLOT
+                    heatmap(data, max_col_idx, vert_max)
 
                     #Reinitialize array as empty
                     data = np.empty((0, 32), dtype=int)
@@ -81,11 +96,14 @@ with serial.Serial (port_path, 115200) as s_port:
                     # decode the bytes to string, remove any whitespace characters, and strip the b and '
                     charIn = charIn.decode().strip(' ,\r\nb')
                     int_row = []
+
                     for x in charIn.split(','):
                         try:
                             int_row.append(int(x))
+                            array.append(int(x))
                         except:
                             int_row.append(0)
+                            array.append(0)
                     if not len(int_row) == 32:
                         raise Exception("Row of data was invalid, and thus array will be wrong size to concatenate")
                         #alternatively could just assign row of zeros.
@@ -95,6 +113,8 @@ with serial.Serial (port_path, 115200) as s_port:
                     
                     # append the row to the data array
                     data = np.vstack((data, np_row))
+
+
                     
             
 

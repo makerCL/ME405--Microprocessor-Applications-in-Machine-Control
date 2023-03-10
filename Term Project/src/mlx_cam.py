@@ -62,7 +62,7 @@ class MLX_Cam:
         self._camera.setup()
 
         ## A local reference to the image object within the camera driver
-        self._image = self._camera.image
+        self._image = self._camera
 
         #initialize image data array
         self.target_arr = np.empty((24, 32), dtype=np.uint8)
@@ -72,17 +72,17 @@ class MLX_Cam:
         @brief   Get one image from a MLX90640 camera.
         @details Grab one image from the given camera and return it. Both
                  subframes (the odd checkerboard portions of the image) are
-                 grabbed and combined. This assumes that the camera is in the
-                 ChessPattern (default) mode as it probably should be.
+                 grabbed and combined (maybe; this is the raw version, so the
+                 combination is sketchy and not fully tested). It is assumed
+                 that the camera is in the ChessPattern (default) mode as it
+                 probably should be.
         @returns A reference to the image object we've just filled with data
         """
         for subpage in (0, 1):
             while not self._camera.has_data:
                 time.sleep_ms(50)
                 print('.', end='')
-            self._camera.read_image(subpage)
-            state = self._camera.read_state()
-            image = self._camera.process_image(subpage, state)
+            image = self._camera.read_image(subpage)
 
         return image
 
@@ -92,11 +92,10 @@ class MLX_Cam:
 
         """
         print(array)
-
         for row in range(self._height):
             line = ""
             for col in range(self._width):
-                pix = int(array[row * self._width + (self._width - col - 1)])
+                pix = int(array[row * self._width + col])
                 if col:
                     line += ","
                 line += f"{pix}"
@@ -105,22 +104,26 @@ class MLX_Cam:
 
 
     def target(self, array):
+        print("TARGET (array)")
+
+        print(array)
         if len(array) != self._height * self._width:
             print("Invalid Array size")
             return
         #TODO: no "astype" funciton in ulab numpy so need a new way to round before assigning to numpy array.
         #Will have to change drivers to just make uints instead
-        self.target_arr = np.array(array, dtype=np.int8).reshape((self._height, self._width))
+        self.target_arr = np.array(array, dtype=np.int16).reshape((self._height, self._width))
+        print("TARGET ARRAY")
         print(self.target_arr)
-        
-        max_temp = np.amax(self.target_arr)
-        min_temp = np.amin(self.target_arr)
 
         print(f"np_arr[0][0] = {self.target_arr[0][0]}")
         print(f"np_arr[1][4] = {self.target_arr[1][4]}")
-        print(f"np_arr[23][32] = {self.target_arr[23][32]}")
+        print(f"np_arr[23][32] = {self.target_arr[23][31]}")
         print(f"np_arr[12][12] = {self.target_arr[12][12]}")
         print(f"np_arr[5][6] = {self.target_arr[5][6]}")
+
+        max_temp = np.max(self.target_arr)
+        min_temp = np.min(self.target_arr)
 
         scaled_array = (self.target_arr - min_temp) / (max_temp - min_temp) * 255
 
@@ -197,13 +200,13 @@ if __name__ == "__main__":
             
             if serial_send:
                 camera.u2.write("Data_Start\r\n")
-                for line in camera.serial_send(image.v_ir):
+                for line in camera.serial_send(image):
                     #print(line)
                     camera.u2.write(line)
 
                 camera.u2.write("Data_Stop\r\n")
 
-            camera.target(image.v_ir)
+            camera.target(image.pix)
 
             time.sleep_ms(5000)
 

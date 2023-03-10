@@ -17,7 +17,7 @@ import seaborn as sns
 
 start = time.time()
 
-port_path = '/dev/cu.usbmodem1103'
+port_path = '/dev/cu.usbmodem2103'
 print(f"Attempting Port Receive on {port_path}")
 
 def heatmap(data, width = 32, height = 24):
@@ -33,7 +33,7 @@ def heatmap(data, width = 32, height = 24):
     scaled_array = (data - min_temp) / (max_temp - min_temp) * 255
     print(f"np_arr[0][0] = {data[0][0]}")
     print(f"np_arr[1][4] = {data[1][4]}")
-    print(f"np_arr[23][32] = {data[23][32]}")
+    print(f"np_arr[23][32] = {data[23][31]}")
     print(f"np_arr[12][12] = {data[12][12]}")
     print(f"np_arr[5][6] = {data[5][6]}")
     #Create mask where the heat is higher than a certain value

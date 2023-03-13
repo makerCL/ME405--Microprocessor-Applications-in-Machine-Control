@@ -24,7 +24,7 @@ from machine import Pin, I2C
 from mlx90640 import MLX90640
 from mlx90640.calibration import NUM_ROWS, NUM_COLS, IMAGE_SIZE, TEMP_K
 from mlx90640.image import ChessPattern, InterleavedPattern
-from ulab import numpy as np
+
 import pyb
 
 class MLX_Cam:
@@ -65,8 +65,11 @@ class MLX_Cam:
         self._image = self._camera
 
         #Field of view of camera
-        self.FOV_yaw = 57 # Degrees
-        self.FOV_pitch  = 30 #Degrees #TODO: FIX THESE. PLACEHOLDER
+        self.FOV_yaw = 55 # Degrees
+        self.FOV_pitch  = 35 #Degrees #TODO: FIX THESE. PLACEHOLDER
+
+        #Serial sending boolean
+        self.send_bool = False
 
     def get_image(self):
         """!
@@ -116,7 +119,6 @@ class MLX_Cam:
 
         # Add to list
         for column in range(self._width):
-            print()
             col = []
             for i in range(0, self._width * self._height, self._width):
                 col.append(array[i + column])
@@ -135,7 +137,6 @@ class MLX_Cam:
 
         #Find max value from the top of the row
         vert_max = max_col.index(max(max_col))
-        print(vert_max)
 
         #pixels right of center
         delta_yaw_pix = max_col_idx - yaw_center
@@ -199,7 +200,7 @@ if __name__ == "__main__":
 
 
     camera.init_VCP()
-    
+    camera.send_bool = True
 
     while True:
         try:
@@ -209,9 +210,7 @@ if __name__ == "__main__":
             image = camera.get_image()
             print(f" {time.ticks_diff(time.ticks_ms(), begintime)} ms")
             
-            serial_send = True
-            
-            if serial_send:
+            if camera.send_bool:
                 camera.u2.write("Data_Start\r\n")
                 for line in camera.serial_send(image):
                     #print(line)

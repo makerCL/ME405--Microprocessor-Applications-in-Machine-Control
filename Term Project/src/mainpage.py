@@ -11,15 +11,18 @@
 
 import gc
 import pyb
+from machine import Pin, I2C
+
 import cotask
 import task_share
-
 import encoder_reader as er
 import motor_driver as md
 import feedback_control as fc
 import servo_controller as sc
+import mlx_cam as mlx
 
-#from mlx_cam import MLX_Cam
+import time
+import math
 
 
 def yaw_mtr_fcn(shares):
@@ -50,14 +53,14 @@ def yaw_mtr_fcn(shares):
         
         #unpack shares
         yaw_target = shares
-        #print(f"yaw shares {yaw_target.get()}")
+        print(f"yaw shares {yaw_target.get()}")
         #Update Target
         mc.set_setpoint(yaw_target.get()) # Define setpoint as 1000 encoder counts
         encd.read() #runs encoder reader, updating object property
         mc.run(encd.position) #runs controller based on latest position reading
         
         #print(f"Time: {pyb.millis()/1000}")
-        #print(f"encoder posn {encd.position}")
+        print(f"encoder posn {encd.position}")
         #print(f"motor pwm {mc.PWM}")
         #print()
         
@@ -93,16 +96,12 @@ def pitch_mtr_fcn(shares):
     while True:
         #unpack shares
         pitch_target = shares
-        print(f"pitch shares {pitch_target.get()}")
-
         #Update Target
         mc.set_setpoint(pitch_target.get()) # Define setpoint as 1000 encoder counts
 
         encd.read() #runs encoder reader, updating object property
-        print('position',encd.position)
         mc.run(encd.position) #runs controller based on latest position reading
-        
-        print(f"PWM {mc.PWM}")
+        print(f"encoder position {encd.position}")
         moe.set_duty_cycle (mc.PWM) #set new duty cycle based on controller result
 
         yield 0 
@@ -138,7 +137,7 @@ def trigger_mtr_fcn():
             reset = True
             print("RESET SERVOooooooooooooooooo")
         yield 0
-'''
+
 def MLX_Cam_fcn(shares):
         # The following import is only used to check if we have an STM32 board such
     # as a Pyboard or Nucleo; if not, use a different library
@@ -154,25 +153,31 @@ def MLX_Cam_fcn(shares):
     else:
         i2c_bus = I2C(1)
 
-    print("MXL90640 Easy(ish) Driver Test")
-
-    # Select MLX90640 camera I2C address, normally 0x33, and check the bus
-    i2c_address = 0x33
-    scanhex = [f"0x{addr:X}" for addr in i2c_bus.scan()]
-    print(f"I2C Scan: {scanhex}")
 
     # Create the camera object and set it up in default mode
-    camera = MLX_Cam(i2c_bus)
+    camera = mlx.MLX_Cam(i2c_bus)
+    camera.init_VCP()
+    camera.send_bool = False
 
+    start = pyb.millis()
+    fired = False
 
+    # Unpack shares
+    cam_yaw, cam_pitch, cam_bool = shares
+    cam_yaw.put(0)
+    
     while True:
+        if pyb.millis() - start > 5000 and not fired:        
+            # Unpack shares
+            cam_yaw, cam_pitch, cam_bool = shares
+
             # Get and image and see how long it takes to grab that image
             print("Click.", end='')
             begintime = time.ticks_ms()
             image = camera.get_image()
             print(f" {time.ticks_diff(time.ticks_ms(), begintime)} ms")
             
-            if camera.serial_send:
+            if camera.send_bool:
                 camera.u2.write("Data_Start\r\n")
                 for line in camera.serial_send(image):
                     #print(line)
@@ -181,35 +186,55 @@ def MLX_Cam_fcn(shares):
                 camera.u2.write("Data_Stop\r\n")
 
             angle_delta_yaw, angle_delta_pitch = camera.target(image.pix)
-            print(f"angle_delta_yaw = {angle_delta_yaw} degrees")
-            print(f"angle_delta_pitch = {angle_delta_pitch} degrees")
+
+            cam_yaw.put(angle_delta_yaw)
+            cam_pitch.put(angle_delta_pitch)
+
+            fired = True
+
+            #print(f"angle_delta_yaw = {cam_yaw.get()} degrees")
+            #print(f"angle_delta_pitch = {cam_pitch.get()} degrees")
+
         yield 0
-'''
+
 def mastermind(shares):
     """!
     Task which takes things out of a queue and share and displays them.
     @param shares A tuple of a share and queue from which this task gets data
     """
     #Unpack old target angles
-    yaw_set_angle, pitch_set_angle = shares
+    yaw_set_angle, pitch_set_angle, cam_yaw, cam_pitch, cam_bool = shares
 
-    new_yaw_target = 10000
-    new_pitch_target = -500
+    new_yaw_target = 0
+    new_pitch_target = 0
     start = pyb.millis()
     start2 = pyb.millis()
+    
+    last_posn = 0
+    cam_bool.put(0)
+
+    a = 120+12 # inches distance from camera to target
+    l = 192 #inches; length of gun to target
+    tpd = 362 #ticks/degree
 
     while True:
-      #  if pyb.millis() - start2 > 1000:
-       #     new_pitch_target = -3000
-
-        if pyb.millis() - start > 5000:
-            new_pitch_target = 0
-            #Calculate new target angles
-#             new_yaw_target *= -1
-          #  start = pyb.millis()
-
+        if cam_yaw.get() == 0: #catches divide by zero error
+            b = 0 
+        else:
+            b = a / math.tan(math.radians(cam_yaw.get()))
+        print(f"CAMERA YAW: {cam_yaw.get()}")
+        new_yaw_target = round(180*tpd - math.degrees(math.atan(b/l)) * tpd )
+        print(f"New yaw target {new_yaw_target}")
+        '''
+        if last_posn == yaw_set_angle: #unverified
+            cam_bool = 1
+            print("CAMERA ON")
+        '''
         #Update with new target angles
         yaw_set_angle.put(new_yaw_target)
+
+        #last_posn = new_yaw_target
+        #cam_bool.put(cam_bool)
         pitch_set_angle.put(new_pitch_target)
         
         yield 0
@@ -224,31 +249,32 @@ if __name__ == "__main__":
     # Create a share and a queue to test function and diagnostic printouts
     yaw_set_angle = task_share.Share('l', thread_protect=False, name="yaw_set_angle")
     pitch_set_angle = task_share.Share('l', thread_protect=False, name="pitch_set_angle")
-    cam_target_angles = task_share.Share('h', thread_protect=False, name="cam_target_angles")
-    
+    cam_target_yaw = task_share.Share('f', thread_protect=False, name="cam_target_yaw")
+    cam_target_pitch = task_share.Share('f', thread_protect=False, name="cam_target_pitch")
+    cam_bool = task_share.Share('B', thread_protect=False, name="cam_bool")
 
     # Create the tasks. If trace is enabled for any task, memory will be
     # allocated for state transition tracing, and the application will run out
     # of memory after a while and quit. Therefore, use tracing only for 
     # debugging and set trace to False when it's not needed
-    yaw_mtr_task = cotask.Task(yaw_mtr_fcn, name="yaw_mtr_task", priority=1, period=20,
+    yaw_mtr_task = cotask.Task(yaw_mtr_fcn, name="yaw_mtr_task", priority=1, period=1,
                         profile=True, trace=False, shares=(yaw_set_angle))
-    pitch_mtr_task = cotask.Task(pitch_mtr_fcn, name="pitch_mtr_task", priority=2, period=20,
+    pitch_mtr_task = cotask.Task(pitch_mtr_fcn, name="pitch_mtr_task", priority=2, period=1,
                         profile=True, trace=False, shares=(pitch_set_angle))
     
     trigger_mtr_task = cotask.Task(trigger_mtr_fcn, name="trigger_motor_task", priority=4, period=20,
                     profile=True, trace=False)
-    '''
-    MLX_Cam_task = cotask.Task(MLX_Cam_fcn, name="MLX_Cam_task", priority=4, period=25,
-                    profile=True, trace=False)
-    '''
-    task_mastermind = cotask.Task(mastermind, name="mastermind_t", priority=3, period=30,
-                    profile=True, trace=False, shares=(yaw_set_angle, pitch_set_angle)) 
     
-    #cotask.task_list.append(yaw_mtr_task)
-    cotask.task_list.append(pitch_mtr_task)
+    MLX_Cam_task = cotask.Task(MLX_Cam_fcn, name="MLX_Cam_task", priority=4, period=100,
+                    profile=True, trace=False, shares = (cam_target_yaw, cam_target_pitch, cam_bool))
+    
+    task_mastermind = cotask.Task(mastermind, name="mastermind_task", priority=3, period=30,
+                    profile=True, trace=False, shares=(yaw_set_angle, pitch_set_angle, cam_target_yaw, cam_target_pitch, cam_bool)) 
+    
+    cotask.task_list.append(yaw_mtr_task)
+    #cotask.task_list.append(pitch_mtr_task)
     #cotask.task_list.append(trigger_mtr_task)
-    #cotask.task_list.append(MLX_Cam_task)
+    cotask.task_list.append(MLX_Cam_task)
     cotask.task_list.append(task_mastermind)
 
     # Run the memory garbage collector to ensure memory is as defragmented as
@@ -261,10 +287,9 @@ if __name__ == "__main__":
             cotask.task_list.pri_sched()
         except KeyboardInterrupt:
             break
-'''
     # Print a table of task data and a table of shared information data
     print('\n' + str (cotask.task_list))
     print(task_share.show_all())
-    print(task1.get_trace())
+    print(MLX_Cam_task.get_trace())
+    print(yaw_mtr_task.get_trace())    
     print('')
-'''

@@ -123,24 +123,25 @@ if __name__ == '__main__':
     import motor_driver as md
     import pyb
     
-    en_pin = pyb.Pin.board.PC1
-    in1pin = pyb.Pin.board.PA0
-    in2pin = pyb.Pin.board.PA1
-    timer = 5
+    ## Create Motor Driver Obejct for 1A motor
+    en_pin = pyb.Pin.board.PA10
+    in1pin = pyb.Pin.board.PB4
+    in2pin = pyb.Pin.board.PB5
+    timer = 3
     moe = md.MotorDriver (en_pin, in1pin, in2pin, timer)
     
-    enc_pin1 = pyb.Pin (pyb.Pin.board.PC6, pyb.Pin.IN)
-    enc_pin2 = pyb.Pin (pyb.Pin.board.PC7, pyb.Pin.IN)
-    timer = 8
+    enc_pin1 = pyb.Pin (pyb.Pin.board.PB6, pyb.Pin.IN)
+    enc_pin2 = pyb.Pin (pyb.Pin.board.PB7, pyb.Pin.IN)
+    timer = 4
     encd = er.EncoderReader (enc_pin1, enc_pin2, timer)
     
     mc = FeedbackControl()
-    mc.set_setpoint(8000)
-    mc.set_kp(0.5)
+    mc.set_setpoint(3000)
+    mc.set_kp(0.1)
     
     while True:   
         encd.read()
         mc.run(encd.position)
         moe.set_duty_cycle (mc.PWM)
-        print(mc.PWM)
+        print(encd.position)
     

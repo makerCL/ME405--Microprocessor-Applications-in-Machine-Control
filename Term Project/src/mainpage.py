@@ -26,7 +26,7 @@ import math
 
 
 def yaw_mtr_fcn(shares):
-
+    #TODO: why is encoder being weird when yaw task run too fast
     ## Create Motor Driver Obejct for 1A motor
     en_pin = pyb.Pin.board.PA10
     in1pin = pyb.Pin.board.PB4
@@ -53,14 +53,14 @@ def yaw_mtr_fcn(shares):
         
         #unpack shares
         yaw_target = shares
-        print(f"yaw shares {yaw_target.get()}")
+        #print(f"yaw shares {yaw_target.get()}")
         #Update Target
         mc.set_setpoint(yaw_target.get()) # Define setpoint as 1000 encoder counts
         encd.read() #runs encoder reader, updating object property
         mc.run(encd.position) #runs controller based on latest position reading
         
         #print(f"Time: {pyb.millis()/1000}")
-        print(f"encoder posn {encd.position}")
+        #print(f"encoder posn {encd.position}")
         #print(f"motor pwm {mc.PWM}")
         #print()
         
@@ -101,13 +101,16 @@ def pitch_mtr_fcn(shares):
 
         encd.read() #runs encoder reader, updating object property
         mc.run(encd.position) #runs controller based on latest position reading
-        print(f"encoder position {encd.position}")
-        moe.set_duty_cycle (mc.PWM) #set new duty cycle based on controller result
+        #print(f"encoder position {encd.position}")
+        
 
+        #Real system offset
+        pit_offset = 40
+        moe.set_duty_cycle (mc.PWM + pit_offset) #set new duty cycle based on controller result
         yield 0 
 
 
-def trigger_mtr_fcn():
+def trigger_mtr_fcn(shares):
     """!
     Task which takes things out of a queue and share and displays them.
     @param shares A tuple of a share and queue from which this task gets data
@@ -119,23 +122,16 @@ def trigger_mtr_fcn():
     servo = sc.servo_controller(PA9, timer, ch)
     servo.set_servo_ang(0)
     
-    fire = True
-    reset = False
-    start = pyb.millis()
+   
 
     while True:
-        if pyb.millis() - start > 2000 and fire:
-            print(f"servo time {pyb.millis()}")
+        fire = shares
+        if fire == 1:
             servo.set_servo_ang(30)
-            print(f"servo time {pyb.millis()}")
             print("FIREDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
-            fire = False
-        elif pyb.millis() - start > 3000 and not reset:
-            print(f"servo time {pyb.millis()}")
+        elif fire == 0:
             servo.set_servo_ang(0)
-            print(f"servo time {pyb.millis()}")
-            reset = True
-            print("RESET SERVOooooooooooooooooo")
+            print("Reset Trigger")
         yield 0
 
 def MLX_Cam_fcn(shares):
@@ -159,18 +155,12 @@ def MLX_Cam_fcn(shares):
     camera.init_VCP()
     camera.send_bool = False
 
-    start = pyb.millis()
-    fired = False
-
-    # Unpack shares
-    cam_yaw, cam_pitch, cam_bool = shares
-    cam_yaw.put(0)
+    camera.send_bool = True
     
     while True:
-        if pyb.millis() - start > 5000 and not fired:        
-            # Unpack shares
-            cam_yaw, cam_pitch, cam_bool = shares
-
+        # Unpack shares
+        cam_target_yaw, cam_target_pitch, take_pic = shares
+        if take_pic.get() == 1:        
             # Get and image and see how long it takes to grab that image
             print("Click.", end='')
             begintime = time.ticks_ms()
@@ -187,10 +177,10 @@ def MLX_Cam_fcn(shares):
 
             angle_delta_yaw, angle_delta_pitch = camera.target(image.pix)
 
-            cam_yaw.put(angle_delta_yaw)
-            cam_pitch.put(angle_delta_pitch)
+            cam_target_yaw.put(angle_delta_yaw)
+            cam_target_pitch.put(angle_delta_pitch)
 
-            fired = True
+            take_pic.put(2)
 
             #print(f"angle_delta_yaw = {cam_yaw.get()} degrees")
             #print(f"angle_delta_pitch = {cam_pitch.get()} degrees")
@@ -202,40 +192,59 @@ def mastermind(shares):
     Task which takes things out of a queue and share and displays them.
     @param shares A tuple of a share and queue from which this task gets data
     """
+    def user_callback(line, user_flag):
+        print("user_callback")
+        user_flag[0] = 1
+        
+    def shutdown_callback(line):
+        pass
+
+    #Interupt flags
+    user_flag = [0] # user input flag
+
+    shutdown_flag = False #Shutdown flag
+
+    #Configure Interrupts
+    user_interrupt = pyb.ExtInt(pyb.Pin.board.PC2, pyb.ExtInt.IRQ_FALLING, pyb.Pin.PULL_UP, lambda line: user_callback(line, user_flag))
+    kill_interrupt = pyb.ExtInt(pyb.Pin.board.PC3, pyb.ExtInt.IRQ_RISING, pyb.Pin.PULL_UP, shutdown_callback)
+
     #Unpack old target angles
-    yaw_set_angle, pitch_set_angle, cam_yaw, cam_pitch, cam_bool = shares
+    yaw_set_angle, pitch_set_angle, cam_target_yaw, cam_target_pitch, take_pic,fire = shares
 
     new_yaw_target = 0
     new_pitch_target = 0
     start = pyb.millis()
     start2 = pyb.millis()
-    
-    last_posn = 0
-    cam_bool.put(0)
 
     a = 120+12 # inches distance from camera to target
     l = 192 #inches; length of gun to target
     tpd = 362 #ticks/degree
+    scale_factor = 0.95
 
-    while True:
-        if cam_yaw.get() == 0: #catches divide by zero error
-            b = 0 
-        else:
-            b = a / math.tan(math.radians(cam_yaw.get()))
-        print(f"CAMERA YAW: {cam_yaw.get()}")
-        new_yaw_target = round(180*tpd - math.degrees(math.atan(b/l)) * tpd )
+    # Holding pattern until user start button is pressed
+    while not user_flag[0]:
+        yield 0
+        
+    t_init = pyb.millis()   # After the button has been pressed record the start time
+
+    while True:  
+        #Rotation and movement delay, per game rules
+        if pyb.millis() - t_init > 5000 and take_pic.get() in {0, 1}:
+            take_pic.put(1)
+
+        #Camera trig functions
+        b = a * math.tan(math.radians(cam_target_yaw.get()))
+
+        print(f"CAMERA YAW: {cam_target_yaw.get()}")
+        tick_delta = math.degrees(math.atan(b/l)) * tpd
+        new_yaw_target = round(180*tpd +  scale_factor * tick_delta)
+
         print(f"New yaw target {new_yaw_target}")
-        '''
-        if last_posn == yaw_set_angle: #unverified
-            cam_bool = 1
-            print("CAMERA ON")
-        '''
+
         #Update with new target angles
         yaw_set_angle.put(new_yaw_target)
 
-        #last_posn = new_yaw_target
-        #cam_bool.put(cam_bool)
-        pitch_set_angle.put(new_pitch_target)
+        pitch_set_angle.put(0) #does not implement pitch data from camera at this time
         
         yield 0
 
@@ -243,36 +252,37 @@ def mastermind(shares):
 # tasks run until somebody presses ENTER, at which time the scheduler stops and
 # printouts show diagnostic information about the tasks, share, and queue.
 if __name__ == "__main__":
-    print("Testing ME405 stuff in cotask.py and task_share.py\r\n"
-          "Press Ctrl-C to stop and show diagnostics.")
+    print("SENTRY ENGAGED!")
 
     # Create a share and a queue to test function and diagnostic printouts
     yaw_set_angle = task_share.Share('l', thread_protect=False, name="yaw_set_angle")
     pitch_set_angle = task_share.Share('l', thread_protect=False, name="pitch_set_angle")
     cam_target_yaw = task_share.Share('f', thread_protect=False, name="cam_target_yaw")
     cam_target_pitch = task_share.Share('f', thread_protect=False, name="cam_target_pitch")
-    cam_bool = task_share.Share('B', thread_protect=False, name="cam_bool")
+    take_pic = task_share.Share('b', thread_protect=False, name="take_pic")
+    fire = task_share.Share('b', thread_protect=False, name="fire")
+
 
     # Create the tasks. If trace is enabled for any task, memory will be
     # allocated for state transition tracing, and the application will run out
     # of memory after a while and quit. Therefore, use tracing only for 
     # debugging and set trace to False when it's not needed
-    yaw_mtr_task = cotask.Task(yaw_mtr_fcn, name="yaw_mtr_task", priority=1, period=1,
+    yaw_mtr_task = cotask.Task(yaw_mtr_fcn, name="yaw_mtr_task", priority=1, period=20,
                         profile=True, trace=False, shares=(yaw_set_angle))
-    pitch_mtr_task = cotask.Task(pitch_mtr_fcn, name="pitch_mtr_task", priority=2, period=1,
+    pitch_mtr_task = cotask.Task(pitch_mtr_fcn, name="pitch_mtr_task", priority=2, period=50,
                         profile=True, trace=False, shares=(pitch_set_angle))
     
     trigger_mtr_task = cotask.Task(trigger_mtr_fcn, name="trigger_motor_task", priority=4, period=20,
-                    profile=True, trace=False)
+                    profile=True, trace=False,shares = (fire))
     
     MLX_Cam_task = cotask.Task(MLX_Cam_fcn, name="MLX_Cam_task", priority=4, period=100,
-                    profile=True, trace=False, shares = (cam_target_yaw, cam_target_pitch, cam_bool))
+                    profile=True, trace=False, shares = (cam_target_yaw, cam_target_pitch, take_pic))
     
-    task_mastermind = cotask.Task(mastermind, name="mastermind_task", priority=3, period=30,
-                    profile=True, trace=False, shares=(yaw_set_angle, pitch_set_angle, cam_target_yaw, cam_target_pitch, cam_bool)) 
+    task_mastermind = cotask.Task(mastermind, name="mastermind_task", priority=3, period=50,
+                    profile=True, trace=False, shares=(yaw_set_angle, pitch_set_angle, cam_target_yaw, cam_target_pitch, take_pic,fire)) 
     
     cotask.task_list.append(yaw_mtr_task)
-    #cotask.task_list.append(pitch_mtr_task)
+    cotask.task_list.append(pitch_mtr_task)
     #cotask.task_list.append(trigger_mtr_task)
     cotask.task_list.append(MLX_Cam_task)
     cotask.task_list.append(task_mastermind)
@@ -290,6 +300,6 @@ if __name__ == "__main__":
     # Print a table of task data and a table of shared information data
     print('\n' + str (cotask.task_list))
     print(task_share.show_all())
-    print(MLX_Cam_task.get_trace())
-    print(yaw_mtr_task.get_trace())    
+    #print(MLX_Cam_task.get_trace())
+    #print(yaw_mtr_task.get_trace())    
     print('')

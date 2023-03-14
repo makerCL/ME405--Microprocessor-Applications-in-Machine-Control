@@ -27,7 +27,7 @@ yaw_center = width / 2 #centered, pixels from left
 pitch_center = height / 2 #cetnered, pixels top; may change with distance/velocity
 
 
-port_path = '/dev/cu.usbmodem1403'
+port_path = '/dev/cu.usbmodem11403'
 print(f"Attempting Port Receive on {port_path}")
 
 def heatmap(data, yaw_aim, pitch_aim):
@@ -55,9 +55,9 @@ with serial.Serial (port_path, 115200) as s_port:
                     reading_data = True
                     array = []
                 elif charIn == b'Data_Stop\r\n':
-                    print(data)  # print the updated data array
+                    #print(data)  # print the updated data array
                     #print(data.shape)
-                    print("\n\n\n\n")
+                    #print("\n\n\n\n")
                     reading_data = False
                     
                     # list of column average heats
@@ -65,7 +65,7 @@ with serial.Serial (port_path, 115200) as s_port:
 
                     # Add to list
                     for column in range(width):
-                        print()
+                        #print()
                         col = []
                         for i in range(0, width * height, width):
                             col.append(array[i + column])
@@ -84,7 +84,7 @@ with serial.Serial (port_path, 115200) as s_port:
 
                     #Find max value from the top of the row
                     vert_max = max_col.index(max(max_col))
-                    print(vert_max)
+                   # print(vert_max)
 
                     # PLOT
                     heatmap(data, max_col_idx, vert_max)

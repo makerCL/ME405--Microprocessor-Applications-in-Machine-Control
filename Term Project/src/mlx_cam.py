@@ -24,6 +24,7 @@ from machine import Pin, I2C
 from mlx90640 import MLX90640
 from mlx90640.calibration import NUM_ROWS, NUM_COLS, IMAGE_SIZE, TEMP_K
 from mlx90640.image import ChessPattern, InterleavedPattern
+from array import array
 
 import pyb
 
@@ -71,6 +72,9 @@ class MLX_Cam:
         #Serial sending boolean
         self.send_bool = False
 
+        #Calibration array
+        self.calib_arr = array('h', [0]*self._height * self._width)
+
     def get_image(self):
         """!
         @brief   Get one image from a MLX90640 camera.
@@ -89,6 +93,11 @@ class MLX_Cam:
             image = self._camera.read_image(subpage)
 
         return image
+    
+    def calibrate(self):
+        self.calib_arr = self.get_image()
+
+
 
     def serial_send(self, array):
         """!

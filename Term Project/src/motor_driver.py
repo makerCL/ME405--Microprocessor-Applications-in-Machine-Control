@@ -52,7 +52,7 @@ class MotorDriver:
                (-) for anticlockwise
         """
         self.EN.value([True]) #enable motor
-        print (f"Setting duty cycle to {level}") 
+        #print (f"Setting duty cycle to {level}") 
         if level <= 0: # conditional logic determines directionality motor
             # which channel the pwm is sent on determines direction in H bridge
             level = min(100,abs(level))

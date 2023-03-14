@@ -27,8 +27,7 @@ class servo_controller:
         """
         ## Initialize the servo mtor pin
         self.CPN = pyb.Pin (PN, pyb.Pin.OUT_PP)
-        self.timer = pyb.Timer(timer, period = 1999)
-        self.timer.prescaler(79)
+        self.timer = pyb.Timer(timer, prescaler = 79, period = 19999)
         self.time_ch = self.timer.channel (ch, pyb.Timer.PWM, pin = self.CPN)
         print ("Creating a servo driver")
         self.time_ch.pulse_width(1000) # Initialize to 0 degree position
@@ -44,26 +43,28 @@ class servo_controller:
         elif angle <= 90:
             pulse = 1000 + angle*500//90  # Pulse width
             self.time_ch.pulse_width(pulse)
-            print (f"Setting duty cycle to {angle}")
-            print(pulse)
+            #print (f"Setting angle to {angle}")
+            #print(pulse)
         else:
             pulse = 1000 + angle*1500//180  # Pulse width 
             self.time_ch.pulse_width(pulse)
-            print (f"Setting duty cycle to {angle}")
-            print(pulse)
+            #print (f"Setting angle to {angle}")
+            #print(pulse)
 
 # Block of code to test Motor
 if __name__ == '__main__':
     ## Initialize the servo motor pin
-    PA2 = pyb.Pin.board.PA9
+    PA9 = pyb.Pin.board.PA9
     timer = 1
     ch = 2
-    servo = servo_controller (PA2, timer, ch)
+    servo = servo_controller (PA9, timer, ch)
 
     while True:
         #PNA2.high()
-        servo.set_servo_ang(0)
-        utime.sleep(3)
-        servo.set_servo_ang(30)
+        servo.set_servo_ang(45)
+        print('45')
+        utime.sleep(5)
+        servo.set_servo_ang(90)
+        print('90')
         utime.sleep(3)
     

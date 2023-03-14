@@ -120,18 +120,21 @@ def trigger_mtr_fcn(shares):
     timer = 1
     ch = 2
     servo = sc.servo_controller(PA9, timer, ch)
-    servo.set_servo_ang(0)
+    servo.set_servo_ang(45)
+    fire = shares
+    fire.put(0)	# Initialize fire to 0
+    fire_t = pyb.millis()
     
-   
-
     while True:
         fire = shares
-        if fire == 1:
-            servo.set_servo_ang(30)
+        if fire.get() == 1:
+            servo.set_servo_ang(90)
             print("FIREDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
-        elif fire == 0:
-            servo.set_servo_ang(0)
-            print("Reset Trigger")
+            fire_t = pyb.millis() # time at fire
+            fire.put(0)	# clear fire command
+        elif fire.get() == 0 and pyb.millis() - fire_t > 1000:
+            servo.set_servo_ang(45)
+            
         yield 0
 
 def MLX_Cam_fcn(shares):
@@ -184,7 +187,6 @@ def MLX_Cam_fcn(shares):
 
             #print(f"angle_delta_yaw = {cam_yaw.get()} degrees")
             #print(f"angle_delta_pitch = {cam_pitch.get()} degrees")
-
         yield 0
 
 def mastermind(shares):
@@ -226,26 +228,28 @@ def mastermind(shares):
         yield 0
         
     t_init = pyb.millis()   # After the button has been pressed record the start time
+    yaw_set_angle.put(180*tpd)
+
 
     while True:  
         #Rotation and movement delay, per game rules
         if pyb.millis() - t_init > 5000 and take_pic.get() in {0, 1}:
             take_pic.put(1)
-
-        #Camera trig functions
-        b = a * math.tan(math.radians(cam_target_yaw.get()))
-
-        print(f"CAMERA YAW: {cam_target_yaw.get()}")
-        tick_delta = math.degrees(math.atan(b/l)) * tpd
-        new_yaw_target = round(180*tpd +  scale_factor * tick_delta)
-
-        print(f"New yaw target {new_yaw_target}")
-
-        #Update with new target angles
-        yaw_set_angle.put(new_yaw_target)
-
-        pitch_set_angle.put(0) #does not implement pitch data from camera at this time
-        
+        elif take_pic.get() == 2: # Once the picture has been taken update position     
+            #Camera trig functions
+            b = a * math.tan(math.radians(cam_target_yaw.get()))
+            print(f"CAMERA YAW: {cam_target_yaw.get()}")
+            tick_delta = math.degrees(math.atan(b/l)) * tpd
+            new_yaw_target = round(180*tpd +  scale_factor * tick_delta)
+            print(f"New yaw target {new_yaw_target}")
+            #Update with new target angles
+            yaw_set_angle.put(new_yaw_target)
+            pitch_set_angle.put(0) #does not implement pitch data from camera at this time
+        if pyb.millis() - t_init > 8000 and take_pic.get() in {2}:
+            print('mastermind fire')
+            fire.put(1) # send signal to pull trigger
+            take_pic.put(0) # allow new picture to be taken
+            t_init = pyb.millis()
         yield 0
 
 # This code creates a share, a queue, and two tasks, then starts the tasks. The
@@ -275,7 +279,7 @@ if __name__ == "__main__":
     trigger_mtr_task = cotask.Task(trigger_mtr_fcn, name="trigger_motor_task", priority=4, period=20,
                     profile=True, trace=False,shares = (fire))
     
-    MLX_Cam_task = cotask.Task(MLX_Cam_fcn, name="MLX_Cam_task", priority=4, period=100,
+    MLX_Cam_task = cotask.Task(MLX_Cam_fcn, name="MLX_Cam_task", priority=5, period=100,
                     profile=True, trace=False, shares = (cam_target_yaw, cam_target_pitch, take_pic))
     
     task_mastermind = cotask.Task(mastermind, name="mastermind_task", priority=3, period=50,
@@ -283,7 +287,7 @@ if __name__ == "__main__":
     
     cotask.task_list.append(yaw_mtr_task)
     cotask.task_list.append(pitch_mtr_task)
-    #cotask.task_list.append(trigger_mtr_task)
+    cotask.task_list.append(trigger_mtr_task)
     cotask.task_list.append(MLX_Cam_task)
     cotask.task_list.append(task_mastermind)
 

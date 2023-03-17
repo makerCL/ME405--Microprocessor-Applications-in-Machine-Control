@@ -48,7 +48,6 @@ def yaw_mtr_fcn(shares):
 
     # Initalize the encoder position
     encd.zero() #zeroes encoder posn
-    
     while True:
         
         #unpack shares
@@ -92,7 +91,6 @@ def pitch_mtr_fcn(shares):
     #mc.set_kd(2)
 
     encd.zero() #zeroes encoder posn
-    
     while True:
         #unpack shares
         pitch_target = shares
@@ -105,7 +103,7 @@ def pitch_mtr_fcn(shares):
         
 
         #Real system offset
-        pit_offset = 40
+        pit_offset = 50
         moe.set_duty_cycle (mc.PWM + pit_offset) #set new duty cycle based on controller result
         yield 0 
 
@@ -218,7 +216,7 @@ def mastermind(shares):
     start = pyb.millis()
     start2 = pyb.millis()
 
-    a = 120+12 # inches distance from camera to target
+    a = 192-51 # inches distance from camera to target
     l = 192 #inches; length of gun to target
     tpd = 362 #ticks/degree
     scale_factor = 0.95
@@ -228,12 +226,15 @@ def mastermind(shares):
         yield 0
         
     t_init = pyb.millis()   # After the button has been pressed record the start time
-    yaw_set_angle.put(180*tpd)
+    wait = 1
 
 
-    while True:  
+    while True:
         #Rotation and movement delay, per game rules
-        if pyb.millis() - t_init > 5000 and take_pic.get() in {0, 1}:
+        if pyb.millis() - t_init > 1000 and wait == 1:
+            new_yaw_target = 180*tpd
+            wait = 0
+        if pyb.millis() - t_init > 5500 and take_pic.get() in {0, 1}:
             take_pic.put(1)
         elif take_pic.get() == 2: # Once the picture has been taken update position     
             #Camera trig functions
@@ -241,15 +242,23 @@ def mastermind(shares):
             print(f"CAMERA YAW: {cam_target_yaw.get()}")
             tick_delta = math.degrees(math.atan(b/l)) * tpd
             new_yaw_target = round(180*tpd +  scale_factor * tick_delta)
+            if new_yaw_target > 67700:
+                new_yaw_target = 67700
+                print('yaw = max left')
+            elif new_yaw_target < 63000:
+                new_yaw_target = 63000
+                print('yaw = max right')
             print(f"New yaw target {new_yaw_target}")
             #Update with new target angles
             yaw_set_angle.put(new_yaw_target)
             pitch_set_angle.put(0) #does not implement pitch data from camera at this time
-        if pyb.millis() - t_init > 8000 and take_pic.get() in {2}:
+        if pyb.millis() - t_init > 9000 and take_pic.get() in {2}:
             print('mastermind fire')
             fire.put(1) # send signal to pull trigger
             take_pic.put(0) # allow new picture to be taken
             t_init = pyb.millis()
+        yaw_set_angle.put(new_yaw_target)
+        pitch_set_angle.put(0) 
         yield 0
 
 # This code creates a share, a queue, and two tasks, then starts the tasks. The

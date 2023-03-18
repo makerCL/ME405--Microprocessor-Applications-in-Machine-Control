@@ -20,9 +20,7 @@ import motor_driver as md
 import feedback_control as fc
 
 def motor1_task_fun():
-"""!
-    Task which performs position control on motor 1.
-"""
+
     ## Create Motor Driver Obejct for 1A motor
     en_pin = pyb.Pin.board.PA10
     in1pin = pyb.Pin.board.PB4
@@ -62,9 +60,6 @@ def motor1_task_fun():
         yield 0        
  
 def motor2_task_fun():
-"""!
-    Task which performs position control on motor 2.
-"""
 ## Create Motor Driver Obejct for 1B motor
     en_pin = pyb.Pin.board.PC1
     in1pin = pyb.Pin.board.PA0
@@ -80,7 +75,7 @@ def motor2_task_fun():
     
     ## Create Feedback Control Object
     mc = fc.FeedbackControl()
-    mc.init_VCP()
+    #mc.init_VCP()
     mc.set_setpoint(1000) # Define setpoint as 1000 encoder counts
     # Set the proportional gain to 0.02 (found to be optimal in lab2)
     mc.set_kp(0.02)

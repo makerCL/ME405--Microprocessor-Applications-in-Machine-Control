@@ -27,7 +27,7 @@ yaw_center = width / 2 #centered, pixels from left
 pitch_center = height / 2 #cetnered, pixels top; may change with distance/velocity
 
 
-port_path = '/dev/cu.usbmodem11403'
+port_path = '/dev/cu.usbmodem1103'
 print(f"Attempting Port Receive on {port_path}")
 
 def heatmap(data, yaw_aim, pitch_aim):
@@ -38,7 +38,7 @@ def heatmap(data, yaw_aim, pitch_aim):
     ##TODO: make this update live
     #https://www.geeksforgeeks.org/how-to-update-a-plot-on-same-figure-during-the-loop/
 
-    plt.scatter(yaw_aim, pitch_aim, marker='o', s=100, c='chartreuse')
+    #plt.scatter(yaw_aim, pitch_aim, marker='o', s=100, c='chartreuse')
     plt.show()
     
 reading_data = False

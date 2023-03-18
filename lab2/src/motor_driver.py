@@ -13,6 +13,7 @@
 
 
 import pyb
+import time
 
 class MotorDriver:
     """! 
@@ -74,9 +75,12 @@ class MotorDriver:
 
 # Block of code to test Motor
 if __name__ == '__main__':
-    en_pin = pyb.Pin.board.PA10
-    in1pin = pyb.Pin.board.PB4
-    in2pin = pyb.Pin.board.PB5
-    timer = 3
+    en_pin = pyb.Pin.board.PC1
+    in1pin = pyb.Pin.board.PA0
+    in2pin = pyb.Pin.board.PA1
+    timer = 5
     moe = MotorDriver (en_pin, in1pin, in2pin, timer)
-    moe.set_duty_cycle (99)        
+    moe.set_duty_cycle (99)
+    time.sleep(5)
+    
+    moe.set_duty_cycle (0)

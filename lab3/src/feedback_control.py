@@ -87,6 +87,7 @@ class FeedbackControl:
                 x_val, y_val = point[0], point[1]
                 self.u2.write(f"{x_val},{y_val}\r\n")   # The "\r\n" is end-of-line stuff
             self.u2.write(f"Data_End\r\n") # Send message that data has ended
+    
     def data_clear(self):
         '''! Clears the data stored in position data
         '''
@@ -118,4 +119,5 @@ if __name__ == '__main__':
         encd.read()
         mc.run(encd.position)
         moe.set_duty_cycle (mc.PWM)
+        print(mc.PWM)
     

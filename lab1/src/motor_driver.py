@@ -69,4 +69,4 @@ if __name__ == '__main__':
     in2pin = pyb.Pin.board.PA1
     timer = 5
     moe = MotorDriver (en_pin, in1pin, in2pin, timer)
-    moe.set_duty_cycle (-42)        
+    moe.set_duty_cycle (42)        

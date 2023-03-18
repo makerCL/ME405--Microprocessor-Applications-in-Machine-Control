@@ -72,6 +72,8 @@ class FeedbackControl:
             self.u2 = pyb.UART(2, baudrate=115200)      # Set up the second USB-serial port
         except:
             print("Problem openning VCP/UART")
+        else:
+            print("VCP Connected")
             
     def data_transfer(self):
         '''! Transfers data stored in pos_data via VCP
@@ -116,6 +118,9 @@ if __name__ == '__main__':
     
     while True:   
         encd.read()
+        print("encoder shit")
+        print(encd.position)
+        print(type(encd.position))
         mc.run(encd.position)
         moe.set_duty_cycle (mc.PWM)
     

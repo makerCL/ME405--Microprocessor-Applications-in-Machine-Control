@@ -19,15 +19,20 @@ class FeedbackControl:
     This class implements a porportional controller for ME405 lab kit
     DC motor with encoder.
     '''
-    def __init__(self, setpoint = 0, k_p = 0):
+    def __init__(self, setpoint = 0, k_p = 0, k_i = 0, k_d = 0):
         '''! Initializes the feedback controller
         @param setpoint The encoder setpoint [stepper counts]
         @param k_p Controller proportional gain [PWM/count]
         '''
         self.k_p = k_p
+        self.k_i = k_i
+        self.k_d = k_d
         self.setpoint = setpoint
         self.PWM = 0
         self.pos_data = []
+
+        self.error_sum = 0
+        self.last_error = 0
         
     def run(self, current_theta):
         '''! Calculates the PWM setpoint for porportional controller
@@ -35,7 +40,13 @@ class FeedbackControl:
         @param k_p Controller proportional gain [PWM/count]
         @param current_theta The current encoder reading
         '''
-        self.PWM = self.k_p*(self.setpoint - current_theta)
+        
+        error = self.setpoint - current_theta
+        self.error_sum += error
+
+        self.PWM = self.k_p * error + self.k_i * self.error_sum + self.k_d * (error - self.last_error)
+        self.last_error = error
+
         
     def set_setpoint(self, setpoint):
         '''! Sets the desired encoder position
@@ -48,6 +59,18 @@ class FeedbackControl:
         @param k_p Controller proportional gain [PWM/count]
         '''
         self.k_p = k_p
+    
+    def set_ki(self,k_i):
+        '''! Sets the proportional gain of controller
+        @param k_i Controller integral gain 
+        '''
+        self.k_i = k_i
+    
+    def set_kd(self,k_d):
+        '''! Sets the proportional gain of controller
+        @param k_d Controller derivative gain 
+        '''
+        self.k_d = k_d
     
     def print_pos_data(self):
         '''! Prints the position and time data stored in self.pos_data
@@ -100,24 +123,25 @@ if __name__ == '__main__':
     import motor_driver as md
     import pyb
     
-    en_pin = pyb.Pin.board.PC1
-    in1pin = pyb.Pin.board.PA0
-    in2pin = pyb.Pin.board.PA1
-    timer = 5
+    ## Create Motor Driver Obejct for 1A motor
+    en_pin = pyb.Pin.board.PA10
+    in1pin = pyb.Pin.board.PB4
+    in2pin = pyb.Pin.board.PB5
+    timer = 3
     moe = md.MotorDriver (en_pin, in1pin, in2pin, timer)
     
-    enc_pin1 = pyb.Pin (pyb.Pin.board.PC6, pyb.Pin.IN)
-    enc_pin2 = pyb.Pin (pyb.Pin.board.PC7, pyb.Pin.IN)
-    timer = 8
+    enc_pin1 = pyb.Pin (pyb.Pin.board.PB6, pyb.Pin.IN)
+    enc_pin2 = pyb.Pin (pyb.Pin.board.PB7, pyb.Pin.IN)
+    timer = 4
     encd = er.EncoderReader (enc_pin1, enc_pin2, timer)
     
     mc = FeedbackControl()
-    mc.set_setpoint(8000)
-    mc.set_kp(0.5)
+    mc.set_setpoint(3000)
+    mc.set_kp(0.1)
     
     while True:   
         encd.read()
         mc.run(encd.position)
         moe.set_duty_cycle (mc.PWM)
-        print(mc.PWM)
+        print(encd.position)
     

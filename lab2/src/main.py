@@ -17,22 +17,22 @@ import pyb
 import utime
 
 ## Create Motor Driver Obejct
-en_pin = pyb.Pin.board.PA10
-in1pin = pyb.Pin.board.PB4
-in2pin = pyb.Pin.board.PB5
-timer = 3
+en_pin = pyb.Pin.board.PC1
+in1pin = pyb.Pin.board.PA0
+in2pin = pyb.Pin.board.PA1
+timer = 5
 moe = md.MotorDriver (en_pin, in1pin, in2pin, timer)
 
 ## Create Encoder Driver Object
-enc_pin1 = pyb.Pin (pyb.Pin.board.PB6, pyb.Pin.IN)
-enc_pin2 = pyb.Pin (pyb.Pin.board.PB7, pyb.Pin.IN)
-timer = 4
+enc_pin1 = pyb.Pin (pyb.Pin.board.PC6, pyb.Pin.IN)
+enc_pin2 = pyb.Pin (pyb.Pin.board.PC7, pyb.Pin.IN)
+timer = 8
 encd = er.EncoderReader (enc_pin1, enc_pin2, timer)
 
 ## Create Feedback Control Object
 mc = fc.FeedbackControl()
 mc.init_VCP()
-mc.set_setpoint(1000) # Define setpoint as 1000 encoder counts
+mc.set_setpoint(3000) # Define setpoint as 1000 encoder counts
 
 ## Loop that prompts for K_p and runs step response based on that.
 while True:

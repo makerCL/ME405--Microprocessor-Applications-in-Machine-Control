@@ -63,9 +63,9 @@ class EncoderReader:
 # Block of code to test Encoder
 if __name__ == '__main__':
     import time
-    enc_pin1 = pyb.Pin (pyb.Pin.board.PC6, pyb.Pin.IN)
-    enc_pin2 = pyb.Pin (pyb.Pin.board.PC7, pyb.Pin.IN)
-    timer = 8
+    enc_pin1 = pyb.Pin (pyb.Pin.board.PB6, pyb.Pin.IN)
+    enc_pin2 = pyb.Pin (pyb.Pin.board.PB7, pyb.Pin.IN)
+    timer = 4
     #encoder reader instantiation
     encd = EncoderReader (enc_pin1, enc_pin2, timer)
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     while True:
         encd.read() #update the reading
         print(encd.position) # print the new position
-        time.sleep(0.1) #sleep for 0.1 seconds, approximately 10Hz (slightly less due to runtime of code)
+        time.sleep(1) #sleep for 0.1 seconds, approximately 10Hz (slightly less due to runtime of code)
 
         '''
         Note: the better way to run this at 10 Hz would be through setting up an interupt, that way despite other

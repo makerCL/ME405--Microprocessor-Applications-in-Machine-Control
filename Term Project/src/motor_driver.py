@@ -13,7 +13,6 @@
 
 
 import pyb
-import time
 
 class MotorDriver:
     """! 
@@ -36,10 +35,10 @@ class MotorDriver:
         self.IN_2 = pyb.Pin (in2pin, pyb.Pin.OUT_PP)
 
         #create timer
-        self.time = pyb.Timer(timer, freq=20000)
+        self.time = pyb.Timer(timer, freq = 20000)
         self.time_ch1 = self.time.channel (1, pyb.Timer.PWM, pin = self.IN_1)
         self.time_ch2 = self.time.channel (2, pyb.Timer.PWM, pin = self.IN_2)
-        #print ("Creating a motor driver")
+        print ("Creating a motor driver")
         
     def set_duty_cycle (self, level):
         """!
@@ -53,7 +52,7 @@ class MotorDriver:
                (-) for anticlockwise
         """
         self.EN.value([True]) #enable motor
-
+        #print (f"Setting duty cycle to {level}") 
         if level <= 0: # conditional logic determines directionality motor
             # which channel the pwm is sent on determines direction in H bridge
             level = min(100,abs(level))
@@ -63,7 +62,6 @@ class MotorDriver:
             level = min(100,abs(level))
             self.time_ch1.pulse_width_percent(0)
             self.time_ch2.pulse_width_percent(level) #min to ensure Duty !> 100
-        print (f"Setting duty cycle to {level}")
 
     def shutdown(self):
         """!
@@ -80,7 +78,4 @@ if __name__ == '__main__':
     in2pin = pyb.Pin.board.PA1
     timer = 5
     moe = MotorDriver (en_pin, in1pin, in2pin, timer)
-    moe.set_duty_cycle (99)
-    time.sleep(5)
-    
-    moe.set_duty_cycle (0)
+    moe.set_duty_cycle (-42)        

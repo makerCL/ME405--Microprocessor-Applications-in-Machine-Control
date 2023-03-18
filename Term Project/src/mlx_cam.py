@@ -17,6 +17,10 @@ example.
 @author JR Ridgely Added simplified wrapper class @c MLX_Cam, January 2023
 @copyright (c) 2022 by the authors and released under the GNU Public License,
     version 3.
+@author Miles Alderman Implemented new functionality for use with in Nerf Sentry, targetting
+    algorithm, and serial send capabilities
+
+@date 3/20/23
 """
 
 import utime as time
@@ -94,15 +98,10 @@ class MLX_Cam:
 
         return image
     
-    def calibrate(self):
-        self.calib_arr = self.get_image()
-
-
-
     def serial_send(self, array):
         """!
         @brief   Send thermal image via serial to computer for heatmap display 
-
+        @param   array array of camera data, 1x32*24 elements of type array
         """
         #print(array)
         for row in range(self._height):
@@ -117,7 +116,10 @@ class MLX_Cam:
 
 
     def target(self, array):
-
+        """!
+        @brief Given array of target data, determine the angle difference between the camera and target
+        @param array array of camera data, 1x32*24 elements of type array
+        """
 
         # Ideal Setpoint as seen on thermal camera
         yaw_center = self._width / 2 #centered, pixels from left
@@ -197,12 +199,11 @@ if __name__ == "__main__":
     else:
         i2c_bus = I2C(1)
 
-    print("MXL90640 Easy(ish) Driver Test")
 
     # Select MLX90640 camera I2C address, normally 0x33, and check the bus
     i2c_address = 0x33
     scanhex = [f"0x{addr:X}" for addr in i2c_bus.scan()]
-    print(f"I2C Scan: {scanhex}")
+    #print(f"I2C Scan: {scanhex}")
 
     # Create the camera object and set it up in default mode
     camera = MLX_Cam(i2c_bus)
@@ -228,14 +229,12 @@ if __name__ == "__main__":
                 camera.u2.write("Data_Stop\r\n")
 
             angle_delta_yaw, angle_delta_pitch = camera.target(image.pix)
-            print(f"angle_delta_yaw = {angle_delta_yaw} degrees")
-            print(f"angle_delta_pitch = {angle_delta_pitch} degrees")
+            #print(f"angle_delta_yaw = {angle_delta_yaw} degrees")
+            #print(f"angle_delta_pitch = {angle_delta_pitch} degrees")
             time.sleep_ms(5000)
 
         except KeyboardInterrupt:
             break
-
-    print ("Done.")
 
 ## @endcond End the block which Doxygen should ignore
 

@@ -9,14 +9,14 @@ On the dueling day, teams compete by placing their launchers on opposite sides o
 
 Custom hardware was designed to interface with an off the shelf 'Nerf Elite 2.0 Blaster,' two brushed DC motors with incremental encoders used for yaw and pitch position control and a servo motor used to actuate the trigger mechanism.
 
-Several design concepts were considered including creating our own dart shooting system with compressed air and selecting a more complex 'Nerf' gun (Nerf Ultra Select) which uses a flywheel to shoot darts and can be electrically actuated. However, we identified concerns with the high mass of these components and inconsistent firing of the flywheel. Based on the competition rules and scoring system, it was determined that a simple, lightweight, single shot blaster actuated by a compressed spring would be able to achieve the speed needed to move quickly and hit our opponents first and the reliability to always fire as expected.
+Several design concepts were considered including creating our own dart shooting system with compressed air and selecting a more complex 'Nerf' blaster (Nerf Ultra Select) which uses a flywheel to shoot darts and can be electrically actuated. However, we identified concerns with the high mass of these components and inconsistent firing of the flywheel. Based on the competition rules and scoring system, it was determined that a simple, lightweight, single shot blaster actuated by a compressed spring would be able to achieve the speed needed to move quickly and hit our opponents first and the reliability to always fire as expected. Additionally, there was very little incentive to use a multi-shot blaster, as only the first shot in each duel was assigned points. 
 
-An image of our CAD model interfaced with the DC motors and 'Nerf' gun can be referenced in the figure below.
+An image of our CAD model interfaced with the DC motors and 'Nerf' blaster can be referenced in the figure below.
 
 ![](CAD_Isometricview.png)
 
 ## Yaw Control
-The yaw angle of the hardware was controlled via the brushed DC motor with an incremental encoder connected to a gear hard mounted to the table with a 1:8 gear ratio. The system is designed so that the yaw gear is stationary and the entire gun assembly rotates freely above the large yaw gear. This rotation is achieved by a bearing that is press-fit to both the main rotating bracket and a protruding stub from the main yaw gear. An exploded section view of this bearing assembly is shown below for reference.
+The yaw angle of the hardware was controlled via the brushed DC motor with an incremental encoder connected to a gear hard mounted to the table with a 1:8 gear ratio. The system is designed so that the yaw gear is stationary and the entire blaster assembly rotates freely above the large yaw gear. This rotation is achieved by a bearing that is press-fit to both the main rotating bracket and a protruding stub from the main yaw gear. An exploded section view of this bearing assembly is shown below for reference.
 
 ![](Yaw_SectionView.png)
 
@@ -32,13 +32,19 @@ The blaster trigger was actuated by a medium torque (20 kg-cm) servo motor. This
 
 ## Camera Mount and Placement
 
-- Miles discuss reasons for placing the camera off the rotating components
+The camera was placed on the table in front of the blaster, as allowed in the game rules. We did this due to the low resolution of the camera. By having it closer to the target, the target was represented by more pixels than if the camera was placed on the camera. This allowed a more accurate targetting algorithm. Additionally, the camera takes between 500 and 800 ms to take an image, which ruled out the possibility of closed loop feedback with the camera and setpoint for alignment with the target and thus further dissuaded us from a camera mounted to the blaster's axes of rotation. Instead, we opted for a single, clearer image and did open loop positioning calculations based on it.
 
 # Software Design
+The software architecture was designed around cooperative multitasking. Each subfunction was separated into its own task that voluntarily yields control of the processor to other tasks. Each task is written to cooperate with the others by regularly giving up control to ensure system performance and avoid blocking conditions. The tasks are managed by a scheduler, which functions by calling the task of the highest priority that is ready to run, as specified by the minimum period for it specified in its instantiation. 
 
+5 tasks were used in the codebase: one for each motor, one for the trigger servo, one for the thermal camera, and one for high level control of system operations and delegation to other tasks. This last task, "mastermind," handles all major logic and flow of operations of the blaster rig. The other 4 tasks represent no high-level logic, instead relying on flags/instructions such as set point to rotate to, whether or not it should fire, and whether or not to take an image. This approach was chosen to keep logic and system flow clear, simple, and centralized. It also minimized variables that needed to be shared between tasks, other than to mastermind. Inter-task data was handled with share variables, 6 of which were implemented to handle pitch/yaw angles of target as seen by camera, pitch/yaw angles to rotate to by motors, fire flag, and flag to take image.
+
+In terms of duel sequencing, a 5 second timer was used after user button is pressed to wait until after the period in which each team may freely move behind their table. Due to the high latency of the thermal camera (1-2 Hz) we did not attempt to shoot while the target was moving. After this 5 seconds, the camera is queued to take an image, and after the motors are given to align with the new target, the trigger flag is raised to fire.
+
+Within each motor task, 3 drivers classes are instiated for the encoder driver, motor driver, and position feedback control. The encoder_reader.py driver implements a class to read and manage the position of a quadrature encoder. It detects underflow/overflow conditions of the 16 bit counter and calculates the position delta. The motor_driver.py driver works by changing the direciton and duty cycle for a BDC motor based on a signed PWM duty cycle passed to it. The feedback_control.py file implments a closed feedback controller to control position of the motor based on the aforementioned encoder and motor objects. It can use any combination of P/I/D control.
 
 # Testing and Results
-
+Significant time was allocated for full-system integration to ensure proper operation before the duels. Yaw motor function worked relatively smoothly from the start, though there were fundamental issues with the pitch control. Due to the convenience of a mounting rail on the upper rear section of the Nerf blaster, we mounted the Nerf blaster with an asymmetric inertial distribution about its pitch axis. Estimates from CAD found online and rough estimations of center of mass suggested that we would have an appropriate amount of torque for pitch actuation. In the hardware iteration phase, however, the pitch gear ratio had to be reduced to properly fit the drive belt in the absense of a tensioning pulley. This resulted in a condition where if the 
 
 # Lessons Learned
 

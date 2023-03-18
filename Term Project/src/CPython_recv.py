@@ -1,13 +1,15 @@
-'''FOR MAC ONLY
+"""!
 
 Author: Miles Alderman
 
-SCRIPT FOR RECEIVING SERIAL DATA FROM MCU
-terminal command to see usb devices:
+Helpful mac terminal commands for USB configuration
+#Display list of connected USB devices (for port_path)
 ls -l /dev/cu.usb*
-screen /dev/cu.usb_________
-'''
 
+#For displaying received camera data
+screen /dev/cu.usb_________
+
+"""
 
 import serial
 import time

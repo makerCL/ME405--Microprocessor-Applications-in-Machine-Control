@@ -26,7 +26,10 @@ import math
 
 
 def yaw_mtr_fcn(shares):
-    #TODO: why is encoder being weird when yaw task run too fast
+    """!
+    @brief Yaw motor task; motor position control tuned with P controller
+    @param Shares share variables for task; set point for yaw motor to rotate to
+    """
     ## Create Motor Driver Obejct for 1A motor
     en_pin = pyb.Pin.board.PA10
     in1pin = pyb.Pin.board.PB4
@@ -68,7 +71,10 @@ def yaw_mtr_fcn(shares):
         yield 0   
 
 def pitch_mtr_fcn(shares):
-
+    """!
+    @brief pitch motor task; motor position control tuned with PI controller
+    @param Shares share variables for task; set point for pitch motor to rotate to
+    """
     ## Create Motor Driver Obejct for 1B motor
     en_pin = pyb.Pin.board.PC1
     in1pin = pyb.Pin.board.PA0
@@ -110,8 +116,10 @@ def pitch_mtr_fcn(shares):
 
 def trigger_mtr_fcn(shares):
     """!
-    Task which takes things out of a queue and share and displays them.
-    @param shares A tuple of a share and queue from which this task gets data
+    @brief task to control actuation of the trigger
+    @param shares share variables for task; fire flag set in mastermind
+        fire = 0 indicates "do not fire"
+        fire = 1 indicates "fire"
     """
     ## Initialize the servo motor pin
     PA9 = pyb.Pin.board.PA9
@@ -120,7 +128,7 @@ def trigger_mtr_fcn(shares):
     servo = sc.servo_controller(PA9, timer, ch)
     servo.set_servo_ang(45)
     fire = shares
-    fire.put(0)	# Initialize fire to 0
+    fire.put(0)	# Initialize fire flag to "dont fire"
     fire_t = pyb.millis()
     
     while True:
@@ -136,6 +144,11 @@ def trigger_mtr_fcn(shares):
         yield 0
 
 def MLX_Cam_fcn(shares):
+    """!
+    @brief Thermal Camera Task
+    @param Shares share variables; cam_target_yaw and cam_target_pitch for angles for angle
+        deltas to center; take_pic is flag to indicate should take image when told by mastermind task
+    """
         # The following import is only used to check if we have an STM32 board such
     # as a Pyboard or Nucleo; if not, use a different library
     try:
@@ -190,23 +203,16 @@ def MLX_Cam_fcn(shares):
 def mastermind(shares):
     """!
     Task which takes things out of a queue and share and displays them.
-    @param shares A tuple of a share and queue from which this task gets data
+    @param shares has access to and sets/reads all variables between tasks. Mastermind handles all
+        major program flow and logic; other tasks contain only functionality for their own functions
     """
     def user_callback(line, user_flag):
         print("user_callback")
         user_flag[0] = 1
         
-    def shutdown_callback(line):
-        pass
-
-    #Interupt flags
+    #Configure Interrupt for "start button"
     user_flag = [0] # user input flag
-
-    shutdown_flag = False #Shutdown flag
-
-    #Configure Interrupts
     user_interrupt = pyb.ExtInt(pyb.Pin.board.PC2, pyb.ExtInt.IRQ_FALLING, pyb.Pin.PULL_UP, lambda line: user_callback(line, user_flag))
-    kill_interrupt = pyb.ExtInt(pyb.Pin.board.PC3, pyb.ExtInt.IRQ_RISING, pyb.Pin.PULL_UP, shutdown_callback)
 
     #Unpack old target angles
     yaw_set_angle, pitch_set_angle, cam_target_yaw, cam_target_pitch, take_pic,fire = shares
@@ -216,6 +222,7 @@ def mastermind(shares):
     start = pyb.millis()
     start2 = pyb.millis()
 
+    #Trigonometry information based on table length and camera positioning
     a = 192-51 # inches distance from camera to target
     l = 192 #inches; length of gun to target
     tpd = 362 #ticks/degree
@@ -234,8 +241,10 @@ def mastermind(shares):
         if pyb.millis() - t_init > 1000 and wait == 1:
             new_yaw_target = 180*tpd
             wait = 0
+
         if pyb.millis() - t_init > 5500 and take_pic.get() in {0, 1}:
             take_pic.put(1)
+
         elif take_pic.get() == 2: # Once the picture has been taken update position     
             #Camera trig functions
             b = a * math.tan(math.radians(cam_target_yaw.get()))
@@ -252,6 +261,7 @@ def mastermind(shares):
             #Update with new target angles
             yaw_set_angle.put(new_yaw_target)
             pitch_set_angle.put(0) #does not implement pitch data from camera at this time
+       
         if pyb.millis() - t_init > 9000 and take_pic.get() in {2}:
             print('mastermind fire')
             fire.put(1) # send signal to pull trigger
@@ -259,11 +269,10 @@ def mastermind(shares):
             t_init = pyb.millis()
         yaw_set_angle.put(new_yaw_target)
         pitch_set_angle.put(0) 
+
         yield 0
 
-# This code creates a share, a queue, and two tasks, then starts the tasks. The
-# tasks run until somebody presses ENTER, at which time the scheduler stops and
-# printouts show diagnostic information about the tasks, share, and queue.
+
 if __name__ == "__main__":
     print("SENTRY ENGAGED!")
 

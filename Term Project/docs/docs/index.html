@@ -62,29 +62,50 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
   <div class="headertitle"><div class="title">ME 405 Term Project </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_src_mainpage"></a> Authors: Caleb Erlenborn and Miles Alderman</p>
+<div class="textblock"><p><a class="anchor" id="md_src_mainpage"></a> </p><dl class="section author"><dt>Author</dt><dd>Caleb Erlenborn </dd>
+<dd>
+Miles Alderman </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>March 20, 2023</dd></dl>
 <h1><a class="anchor" id="autotoc_md0"></a>
-Section 1</h1>
-<h2><a class="anchor" id="sub_2"></a>
-Subsection 2</h2>
-<p>A task diagram for our term project design can be referenced below.</p>
+Software Design</h1>
+<p>The software architecture was designed around cooperative multitasking. Each subfunction was separated into its own task that voluntarily yields control of the processor to other tasks. Each task is written to cooperate with the others by regularly giving up control to ensure system performance and avoid blocking conditions. The tasks are managed by a scheduler, which functions by calling the task of the highest priority that is ready to run, as specified by the minimum period for it specified in its instantiation.</p>
+<p>5 tasks were used in the codebase: one for each motor, one for the trigger servo, one for the thermal camera, and one for high level control of system operations and delegation to other tasks. This last task, "mastermind," handles all major logic and flow of operations of the blaster apparatus. The other 4 tasks represent no high-level logic, instead relying on flags/instructions such as set point to rotate to, whether or not it should fire, and whether or not to take an image. This approach was chosen to keep logic and system flow clear, simple, and centralized. It also minimized variables that needed to be shared between tasks, other than to mastermind. Inter-task data was handled with share variables, 6 of which were implemented to handle pitch/yaw angles of target as seen by camera, pitch/yaw angles to rotate to by motors, fire flag, and flag to take image.</p>
+<p>In terms of duel sequencing, a 5 second timer was used after user button is pressed to wait until after the period in which each team may freely move behind their table. Due to the high latency of the thermal camera (1-2 Hz) we did not attempt to shoot while the target was moving. After this 5 seconds, the camera is queued to take an image, and after the motors are given to align with the new target, the trigger flag is raised to fire.</p>
+<p>Within each motor task, 3 drivers classes are instiated for the encoder driver, motor driver, and position feedback control. The <a class="el" href="encoder__reader_8py.html" title="Encoder reader class.">encoder_reader.py</a> driver implements a class to read and manage the position of a quadrature encoder. It detects underflow/overflow conditions of the 16 bit counter and calculates the position delta. The <a class="el" href="motor__driver_8py.html" title="Motor driver class.">motor_driver.py</a> driver works by changing the direciton and duty cycle for a BDC motor based on a signed PWM duty cycle passed to it. The <a class="el" href="feedback__control_8py.html" title="Feedback Controller Class.">feedback_control.py</a> file implments a closed feedback controller to control position of the motor based on the aforementioned encoder and motor objects. It can use any combination of P/I/D control.</p>
+<p>A task share diagram and finite state machines for each task can be referenced in the figures below.</p>
+<h2><a class="anchor" id="autotoc_md1"></a>
+Task Share Diagram</h2>
+<p>The task share diagram describes the shared variables between tasks and priority/frequency of each task.</p>
 <div class="image">
-<img src="TASK_Diagram.jpg" alt=""/>
+<img src="Task_Share.png" alt=""/>
 <div class="caption">
-Figure 1</div></div>
-    <p>A finite state machine for the first task (Read_Camera) can be referenced below.</p>
+Task Share Diagram</div></div>
+    <h2><a class="anchor" id="autotoc_md2"></a>
+Mastermind</h2>
+<p>Mastermind handels all timing and processes information to define motor set points, request new camera image and set a trigger actuation. The finite state machine for mastermind is attached below.</p>
 <div class="image">
-<img src="Camera_FSM.jpg" alt=""/>
-</div>
-    <p>A finite state machine to perform position control on each DC motor can be referenced below.</p>
+<img src="Mastermind_FSM.png" alt=""/>
+<div class="caption">
+Mastermind FSM</div></div>
+    <h2><a class="anchor" id="autotoc_md3"></a>
+Thermal Camera</h2>
+<p>The thermal camera state takes a picture by communicating with the mlx camera. This task also processes the image for a target and sets a desired yaw and pitch angle based on the camera field of view.</p>
 <div class="image">
-<img src="Motor_Controller_FSM.PNG" alt=""/>
-</div>
-    <p>Finally a FSM for the trigger actuation system can be referenced below.</p>
+<img src="Thermal_Camera_FSM.png" alt=""/>
+<div class="caption">
+Thermal Camera FSM</div></div>
+    <h2><a class="anchor" id="autotoc_md4"></a>
+Trigger</h2>
+<p>The trigger task is used to actuate a servo motor to fire the nerf gun when the signal from mastermind is recieved.</p>
 <div class="image">
-<img src="Trigger_Actuation_FSM.PNG" alt=""/>
-</div>
-     </div></div><!-- PageDoc -->
+<img src="Trigger_FSM.png" alt=""/>
+<div class="caption">
+Trigger FSM</div></div>
+    <h2><a class="anchor" id="autotoc_md5"></a>
+Yaw and Pitch Motors FSM</h2>
+<p>The finite machines for the yaw and pitch controller tasks are defined below. Both tasks use the same control approach and the desired set point is controlled by shared variables with mastermind.</p>
+<p><img src="Yaw_FSM.png" alt="" class="inline" title="Yaw Motor FSM"/>     <img src="Pitch_FSM.png" alt="" class="inline" title="Pitch Motor FSM"/>     </p>
+</div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

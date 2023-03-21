@@ -25,8 +25,12 @@
 var NAVTREE =
 [
   [ "ME 405 Term Project", "index.html", [
-    [ "Section 1", "index.html#autotoc_md0", [
-      [ "Subsection 2", "index.html#sub_2", null ]
+    [ "Software Design", "index.html#autotoc_md0", [
+      [ "Task Share Diagram", "index.html#autotoc_md1", null ],
+      [ "Mastermind", "index.html#autotoc_md2", null ],
+      [ "Thermal Camera", "index.html#autotoc_md3", null ],
+      [ "Trigger", "index.html#autotoc_md4", null ],
+      [ "Yaw and Pitch Motors FSM", "index.html#autotoc_md5", null ]
     ] ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ]

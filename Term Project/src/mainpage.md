@@ -3,27 +3,6 @@
 @date March 20, 2023
 
 
-The software was designed to implement cooperative multi-tasking with five tasks as described in the task share diagram and finite state machines below. All high level processing, timing and intertask communication was handeled through the task 'mastermind' which was used to send encoder position set points to two motor tasks controlling both the yaw and pitch motors, respectively. 
-
-
-# Section 1
-
-A task diagram for our term project design can be referenced below.
-
-![Figure 1](/TASK_Diagram.jpg)
-
-A finite state machine for the first task (Read_Camera) can be referenced below.
-
-![](/Camera_FSM.jpg)
-
-A finite state machine to perform position control on each DC motor can be referenced below.
-
-![](/Motor_Controller_FSM.PNG)
-
-Finally a FSM for the trigger actuation system can be referenced below.
-
-![](/Trigger_Actuation_FSM.PNG)
-
 # Software Design
 
 The software architecture was designed around cooperative multitasking. Each subfunction was separated into its own task that voluntarily yields control of the processor to other tasks. Each task is written to cooperate with the others by regularly giving up control to ensure system performance and avoid blocking conditions. The tasks are managed by a scheduler, which functions by calling the task of the highest priority that is ready to run, as specified by the minimum period for it specified in its instantiation. 
@@ -33,3 +12,38 @@ The software architecture was designed around cooperative multitasking. Each sub
 In terms of duel sequencing, a 5 second timer was used after user button is pressed to wait until after the period in which each team may freely move behind their table. Due to the high latency of the thermal camera (1-2 Hz) we did not attempt to shoot while the target was moving. After this 5 seconds, the camera is queued to take an image, and after the motors are given to align with the new target, the trigger flag is raised to fire.
 
 Within each motor task, 3 drivers classes are instiated for the encoder driver, motor driver, and position feedback control. The encoder_reader.py driver implements a class to read and manage the position of a quadrature encoder. It detects underflow/overflow conditions of the 16 bit counter and calculates the position delta. The motor_driver.py driver works by changing the direciton and duty cycle for a BDC motor based on a signed PWM duty cycle passed to it. The feedback_control.py file implments a closed feedback controller to control position of the motor based on the aforementioned encoder and motor objects. It can use any combination of P/I/D control.
+
+A task share diagram and finite state machines for each task can be referenced in the figures below.
+
+## Task Share Diagram
+
+The task share diagram describes the shared variables between tasks and priority/frequency of each task.
+
+![Task Share Diagram](Task_Share.png)
+
+
+## Mastermind 
+
+Mastermind handels all timing and processes information to define motor set points, request new camera image and set a trigger actuation. The finite state machine for mastermind is attached below.
+
+![Mastermind FSM](Mastermind_FSM.png)
+
+## Thermal Camera  
+
+The thermal camera state takes a picture by communicating with the mlx camera. This task also processes the image for a target and sets a desired yaw and pitch angle based on the camera field of view.
+
+![Thermal Camera FSM](Thermal_Camera_FSM.png)
+
+## Trigger  
+
+The trigger task is used to actuate a servo motor to fire the nerf gun when the signal from mastermind is recieved.
+
+![Trigger FSM](Trigger_FSM.png)
+
+## Yaw and Pitch Motors FSM
+
+The finite machines for the yaw and pitch controller tasks are defined below. Both tasks use the same control approach and the desired set point is controlled by shared variables with mastermind.
+
+![Yaw Motor FSM](Yaw_FSM.png)
+![Pitch Motor FSM](Pitch_FSM.png)
+

@@ -15,10 +15,16 @@ An image of our CAD model interfaced with the DC motors and 'Nerf' blaster can b
 
 ![](CAD_Isometricview.png)
 
+Additionally, images of our fully integrated model can be referenced below for components not modeled in CAD.
+
+![](Front_View.png)
+![](Side_View.png)
+
 ## Yaw Control
 The yaw angle of the hardware was controlled via the brushed DC motor with an incremental encoder connected to a gear hard mounted to the table with a 1:8 gear ratio. The system is designed so that the yaw gear is stationary and the entire blaster assembly rotates freely above the large yaw gear. This rotation is achieved by a bearing that is press-fit to both the main rotating bracket and a protruding stub from the main yaw gear. An exploded section view of this bearing assembly is shown below for reference.
 
 ![](Yaw_SectionView.png)
+
 
 ## Pitch Control
 
@@ -29,6 +35,8 @@ The pitch angle of the 'Nerf' blaster is achieved by controlling the position of
 ## Trigger Mechanism
 
 The blaster trigger was actuated by a medium torque (20 kg-cm) servo motor. This motor was selected as testing of the Nerf Elite 2.0 determined that approximately 30 N of force was required to actuate the trigger. An image of the trigger servo motor mounted to the blaster assembly can be referenced in the figure below.
+
+![](Trigger_Mounted.png)
 
 ## Camera Mount and Placement
 
@@ -48,13 +56,19 @@ Significant time was allocated for full-system integration to ensure proper oper
 
 Another setback occured in the early implementation of the trigger servo. Since there wasn't time to implement a custom PCB with different power levels, we only had 12V from the power supply for the DC motors and the 3V3 and 5V lines of the Nucleo development board. We attempted to power the servo off this line since it was only predicted to need 100-200 mA, but ultimately it required more power than the board was able to supply. This resulted in reset conditions beign triggered in the MCU and led to issues with the trigger task's integration. We fixed this by using a second power supply.
 
+Through testing, we also implemented a limit to maximum yaw rotation to the limits of the table. We found that limiting the yaw set angle between 67700 and 63000 encoder ticks limited the target to each side of the opposing table.
 
+On competition day, we were able to compete against other lab groups in the Tuesday afternoon section. During the first rounds of competition, we tuned the yaw rotation limits and timing of the trigger mechanism for optimal performance, and we ended up with a very reliable system that was able to hit the target more it would miss. This resulted in us going undefeated in duels with other groups and placing first in our sections competition.
 
 # Lessons Learned
+Through completing this project there were several lessons learned regarding the mechanical design, project management and implementation of real systems.
 
-- Rigidity tests (issues with yaw motion causing vibration)
-- Needed higher gear ratio for pitch control
-- order backup critical components ahead of time
+Regarding hardware design, we realized the benefit of simplicity. Our relatively simple, lightweight design allowed for quick motion and simplified logic. During the competition we found that our simple design was much more reliable than some of the more complicated mechanisms and was one of the reasons that we placed first in our lab section.
 
+Additionally, being able to quickly prototype our designs allowed time for multiple iterations and full system intergation. For example, we originally decided to make the large main yaw gear out of laser cut wood. However, we found that the laser cutter was unable to accomodate the fine teeth needed without burning the wood. We experimented with other materials like polycarbonate, but we were unable to get a good surface finish. Nonetheless, because we began manufacturing these components weeks before the project deadline, we were able to easily shift to a 3D printed design which provided an excellent surface finish for the fine teeth even though it was a rather long print time. 
 
-Worked well: lightweight design, quick motion, simplified and centralized logic, allow plenty of time for full system integration
+Furthermore, we did identify some comcerns with rigidity of the press-fit yaw axis bearing. We found that with fast motions the yaw axis would deflect due to the bearing interface. One way to improve this design would be to have a larger stub protruding from the main yaw gear and two bearings in line to carry this bending momement. We considered remaking these 3D printed parts, but decided to focus on optimizing the current design first. We found that by tuning the controller speed we were able to reduce these rigidity issues and achieve adequate performance. However, if we were to do this again, we would definitely imporve the rigidity of this connection.
+
+As mentioned in the testing and results section, we did experience issues with not having a high enough gear ratio to achieve reliable pitch control. This mistake was likely caused by a misguided intuition on the expected torque from our brushed DC motors as we didn't consider pitch control torque as a high demand. Ultimately, this didn't end up being an issue because there wasn't a need for exact pitch control. However, more detailed high-level planning may have identitifed this issue beforehand and allowed us to select a higher gear ratio for more reliable pitch control.
+
+Finally, regarding project management, we learned the importance of having replacements ready for component integration failure. Even though we followed all safety precautions necessary, we ended up breaking our trigger actuation servo motor during system integration. Although we were able to find a replacement, we would have saved a lot of last minute scrambling if we were to have sourced back up components for the case of a component failure.

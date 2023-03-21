@@ -1,11 +1,10 @@
 """!
 @file main.py
 
-@brief Main file for Nerf Sentry gun
+@brief Main file for Nerf Sentry gun that handles multi-tasking.
 
 @author Miles Alderman
 @author Caleb Erlenborn
-
 
 """
 
@@ -30,6 +29,8 @@ def yaw_mtr_fcn(shares):
     @brief Yaw motor task; motor position control tuned with P controller
     @param Shares share variables for task; set point for yaw motor to rotate to
     """
+
+    ## Initialization state 0 
     ## Create Motor Driver Obejct for 1A motor
     en_pin = pyb.Pin.board.PA10
     in1pin = pyb.Pin.board.PB4
@@ -48,26 +49,18 @@ def yaw_mtr_fcn(shares):
 
     # Set Gains
     mc.set_kp(0.05)
-
     # Initalize the encoder position
     encd.zero() #zeroes encoder posn
+    
+    # After initialization, the task unpacks the set point and runs the motor controller.
     while True:
-        
         #unpack shares
         yaw_target = shares
-        #print(f"yaw shares {yaw_target.get()}")
         #Update Target
-        mc.set_setpoint(yaw_target.get()) # Define setpoint as 1000 encoder counts
+        mc.set_setpoint(yaw_target.get()) 
         encd.read() #runs encoder reader, updating object property
-        mc.run(encd.position) #runs controller based on latest position reading
-        
-        #print(f"Time: {pyb.millis()/1000}")
-        #print(f"encoder posn {encd.position}")
-        #print(f"motor pwm {mc.PWM}")
-        #print()
-        
+        mc.run(encd.position) #runs controller based on latest position reading     
         moe.set_duty_cycle (mc.PWM) #set new duty cycle based on controller result
-
         yield 0   
 
 def pitch_mtr_fcn(shares):
@@ -75,6 +68,8 @@ def pitch_mtr_fcn(shares):
     @brief pitch motor task; motor position control tuned with PI controller
     @param Shares share variables for task; set point for pitch motor to rotate to
     """
+
+    ## Initialization State 0
     ## Create Motor Driver Obejct for 1B motor
     en_pin = pyb.Pin.board.PC1
     in1pin = pyb.Pin.board.PA0
@@ -93,24 +88,18 @@ def pitch_mtr_fcn(shares):
     
     # Set gains
     mc.set_kp(0.25)
-    mc.set_ki(0.005)
-    #mc.set_kd(2)
-
+    mc.set_ki(0.005)    # Integral control needed to achieve zero steady state error.
     encd.zero() #zeroes encoder posn
+
+    # After initialization, the task unpacks the set point and runs the motor controller.
     while True:
         #unpack shares
         pitch_target = shares
         #Update Target
-        mc.set_setpoint(pitch_target.get()) # Define setpoint as 1000 encoder counts
-
+        mc.set_setpoint(pitch_target.get()) 
         encd.read() #runs encoder reader, updating object property
         mc.run(encd.position) #runs controller based on latest position reading
-        #print(f"encoder position {encd.position}")
-        
-
-        #Real system offset
-        pit_offset = 50
-        moe.set_duty_cycle (mc.PWM + pit_offset) #set new duty cycle based on controller result
+        moe.set_duty_cycle (mc.PWM) #set new duty cycle based on controller result
         yield 0 
 
 
@@ -121,6 +110,7 @@ def trigger_mtr_fcn(shares):
         fire = 0 indicates "do not fire"
         fire = 1 indicates "fire"
     """
+    ## Initialization State 0
     ## Initialize the servo motor pin
     PA9 = pyb.Pin.board.PA9
     timer = 1
@@ -131,6 +121,8 @@ def trigger_mtr_fcn(shares):
     fire.put(0)	# Initialize fire flag to "dont fire"
     fire_t = pyb.millis()
     
+    # After initalization set the servo position to actuate the trigger when the share 'fire' is 1.
+    # One second after fireing, reset the servo position
     while True:
         fire = shares
         if fire.get() == 1:
@@ -139,8 +131,7 @@ def trigger_mtr_fcn(shares):
             fire_t = pyb.millis() # time at fire
             fire.put(0)	# clear fire command
         elif fire.get() == 0 and pyb.millis() - fire_t > 1000:
-            servo.set_servo_ang(45)
-            
+            servo.set_servo_ang(45) # Reset servo position     
         yield 0
 
 def MLX_Cam_fcn(shares):
@@ -171,6 +162,8 @@ def MLX_Cam_fcn(shares):
 
     camera.send_bool = True
     
+    ## After initialization, take a photo when take_pic == 1
+    ## Store the desired yaw and pitch angle from the camera field of view in the shared variable with mastermind
     while True:
         # Unpack shares
         cam_target_yaw, cam_target_pitch, take_pic = shares
@@ -184,7 +177,6 @@ def MLX_Cam_fcn(shares):
             if camera.send_bool:
                 camera.u2.write("Data_Start\r\n")
                 for line in camera.serial_send(image):
-                    #print(line)
                     camera.u2.write(line)
 
                 camera.u2.write("Data_Stop\r\n")
@@ -193,11 +185,7 @@ def MLX_Cam_fcn(shares):
 
             cam_target_yaw.put(angle_delta_yaw)
             cam_target_pitch.put(angle_delta_pitch)
-
-            take_pic.put(2)
-
-            #print(f"angle_delta_yaw = {cam_yaw.get()} degrees")
-            #print(f"angle_delta_pitch = {cam_pitch.get()} degrees")
+            take_pic.put(2)         # Tell mastermind that a picture has been taken
         yield 0
 
 def mastermind(shares):
@@ -222,7 +210,7 @@ def mastermind(shares):
     start = pyb.millis()
     start2 = pyb.millis()
 
-    #Trigonometry information based on table length and camera positioning
+    #Trigonometry information based on table length and camera positioning to convert camera field of view to gun field of view
     a = 192-51 # inches distance from camera to target
     l = 192 #inches; length of gun to target
     tpd = 362 #ticks/degree
@@ -251,25 +239,26 @@ def mastermind(shares):
             print(f"CAMERA YAW: {cam_target_yaw.get()}")
             tick_delta = math.degrees(math.atan(b/l)) * tpd
             new_yaw_target = round(180*tpd +  scale_factor * tick_delta)
+           ## Hard stops that describe the encoder position at each side of the table
             if new_yaw_target > 67700:
                 new_yaw_target = 67700
                 print('yaw = max left')
             elif new_yaw_target < 63000:
                 new_yaw_target = 63000
                 print('yaw = max right')
+
             print(f"New yaw target {new_yaw_target}")
             #Update with new target angles
             yaw_set_angle.put(new_yaw_target)
             pitch_set_angle.put(0) #does not implement pitch data from camera at this time
        
-        if pyb.millis() - t_init > 9000 and take_pic.get() in {2}:
+        if pyb.millis() - t_init > 9000 and take_pic.get() in {2}: # After 9 seconds and when camera task has indicated that a picture has been taken
             print('mastermind fire')
             fire.put(1) # send signal to pull trigger
             take_pic.put(0) # allow new picture to be taken
             t_init = pyb.millis()
         yaw_set_angle.put(new_yaw_target)
         pitch_set_angle.put(0) 
-
         yield 0
 
 
